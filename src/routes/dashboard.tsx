@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,50 +12,64 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { authClient, useSession } from '@/lib/client/auth-client'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { BookOpen, ChevronRight } from 'lucide-react'
-import { useEffect } from 'react'
+} from '@/components/ui/dropdown-menu';
+import { authClient, useSession } from '@/lib/client/auth-client';
+import { workbooksCollection } from '@/lib/client/collections';
+import { createWorkbook } from '@/lib/functions/workbooks';
+import { useLiveQuery } from '@tanstack/react-db';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { BookOpen, ChevronRight, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export const Route = createFileRoute('/dashboard')({ component: Dashboard })
-
-// Mock workbook data
-const mockWorkbooks = [
-  {
-    id: '1',
-    name: 'My Workbook',
-    debtCount: 5,
-    totalBalance: 63470.0,
-    createdAt: new Date('2024-11-01'),
-  },
-]
+export const Route = createFileRoute('/dashboard')({
+  ssr: false,
+  component: Dashboard,
+});
 
 function Dashboard() {
-  const navigate = useNavigate()
-  const { data: session, isPending } = useSession()
+  const navigate = useNavigate();
+  const { data: session, isPending } = useSession();
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
-      navigate({ to: '/' })
+      navigate({ to: '/' });
     }
-  }, [session, isPending, navigate])
+  }, [session, isPending, navigate]);
+
+  const { data: workbooks } = useLiveQuery((q) =>
+    q
+      .from({ workbook: workbooksCollection })
+      .orderBy(({ workbook }) => workbook.name),
+  );
 
   const handleSignOut = async () => {
-    await authClient.signOut()
-    navigate({ to: '/' })
-  }
+    await authClient.signOut();
+    navigate({ to: '/' });
+  };
+
+  const handleCreateWorkbook = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
+    try {
+      const { workbook } = await createWorkbook({ data: {} });
+      navigate({ to: `/w/${workbook.id}` });
+    } catch (error) {
+      console.error('Failed to create workbook:', error);
+      setIsCreating(false);
+    }
+  };
 
   if (isPending) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-600 text-xl">Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!session?.user) {
-    return null
+    return null;
   }
 
   return (
@@ -116,7 +130,7 @@ function Dashboard() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {mockWorkbooks.map((workbook) => (
+          {workbooks.map((workbook) => (
             <Card
               key={workbook.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -132,11 +146,14 @@ function Dashboard() {
                       <CardTitle className="text-xl">{workbook.name}</CardTitle>
                       <CardDescription className="text-xs mt-1">
                         Created{' '}
-                        {workbook.createdAt.toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {new Date(workbook.createdAt).toLocaleDateString(
+                          'en-US',
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          },
+                        )}
                       </CardDescription>
                     </div>
                   </div>
@@ -147,13 +164,13 @@ function Dashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Debts</span>
-                    <span className="font-medium">{workbook.debtCount}</span>
+                    <span className="font-medium">{5}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Balance</span>
                     <span className="font-medium">
                       $
-                      {workbook.totalBalance.toLocaleString('en-US', {
+                      {(50000).toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -163,8 +180,25 @@ function Dashboard() {
               </CardContent>
             </Card>
           ))}
+
+          {/* New Workbook Button */}
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all border-2 border-dashed border-gray-300 bg-gray-50/50 hover:bg-gray-100/50 hover:border-gray-400 flex items-center justify-center min-h-[240px]"
+            onClick={handleCreateWorkbook}
+          >
+            <div className="flex flex-col items-center gap-3 p-6">
+              <div className="p-3 bg-gray-200/70 rounded-lg">
+                <Plus className="h-8 w-8 text-gray-500" />
+              </div>
+              <div className="text-center">
+                <CardTitle className="text-lg text-gray-600">
+                  {isCreating ? 'Creating...' : 'New Workbook'}
+                </CardTitle>
+              </div>
+            </div>
+          </Card>
         </div>
       </main>
     </div>
-  )
+  );
 }
