@@ -147,7 +147,6 @@ function WorkbookDetail() {
         rate: debt.rate.toString(),
         minPayment: debt.minPayment.toString(),
         balance: debt.balance.toString(),
-        createdAt: new Date().toISOString(),
       });
     });
   };
@@ -311,10 +310,16 @@ function WorkbookDetail() {
                         {debt.rate.toFixed(2)}%
                       </TableCell>
                       <TableCell className="text-right">
-                        ${debt.minPayment.toFixed(2)}
+                        {debt.minPayment.toNumber().toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        })}
                       </TableCell>
                       <TableCell className="text-right">
-                        ${debt.balance.toFixed(2)}
+                        {debt.balance.toNumber().toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        })}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -344,10 +349,16 @@ function WorkbookDetail() {
                   <TableCell></TableCell>
                   <TableCell></TableCell>
                   <TableCell className="text-right font-bold">
-                    ${totalMinPayment.toFixed(2)}
+                    {totalMinPayment.toNumber().toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                    })}
                   </TableCell>
                   <TableCell className="text-right font-bold">
-                    ${totalBalance.toFixed(2)}
+                    {totalBalance.toNumber().toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                    })}
                   </TableCell>
                   <TableCell></TableCell>
                 </TableRow>

@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,11 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { WorkbookCard } from '@/components/WorkbookCard';
 import { authClient, useSession } from '@/lib/client/auth-client';
 import { workbooksCollection } from '@/lib/client/collections';
 import { useLiveQuery } from '@tanstack/react-db';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { BookOpen, ChevronRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
@@ -126,62 +121,15 @@ function Dashboard() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {workbooks.map((workbook) => (
-            <Card
-              key={workbook.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate({ to: `/w/${workbook.id}` })}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <BookOpen className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{workbook.name}</CardTitle>
-                      <CardDescription className="text-xs mt-1">
-                        Created{' '}
-                        {new Date(workbook.createdAt).toLocaleDateString(
-                          'en-US',
-                          {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          },
-                        )}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Debts</span>
-                    <span className="font-medium">{5}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Balance</span>
-                    <span className="font-medium">
-                      $
-                      {(50000).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <WorkbookCard key={workbook.id} workbook={workbook} />
           ))}
 
           {/* New Workbook Button */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all border-2 border-dashed border-gray-300 bg-gray-50/50 hover:bg-gray-100/50 hover:border-gray-400 flex items-center justify-center min-h-[240px]"
+            className="cursor-pointer hover:shadow-lg transition-all border-2 border-dashed border-gray-300 bg-gray-50/50 hover:bg-gray-100/50 hover:border-gray-400 flex items-center justify-center"
             onClick={handleCreateWorkbook}
           >
-            <div className="flex flex-col items-center gap-3 p-6">
+            <div className="flex flex-col items-center gap-3 p-4">
               <div className="p-3 bg-gray-200/70 rounded-lg">
                 <Plus className="h-8 w-8 text-gray-500" />
               </div>
