@@ -1,0 +1,72 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp")]
+}
+
+model User {
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name          String
+  email         String   @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@index([userId, expiresAt(sort: Desc)])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId                String    @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId            String
+  accountId             String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  scope                 String?
+  password              String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @db.Timestamptz
+  createdAt             DateTime  @default(now()) @db.Timestamptz
+  updatedAt             DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  @@unique([userId, providerId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@map("verifications")
+}
