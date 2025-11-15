@@ -1,4 +1,3 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -6,15 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,46 +14,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { authClient, useSession } from '@/lib/client/auth-client'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { BookOpen, ChevronRight } from 'lucide-react'
 import { useEffect } from 'react'
 
 export const Route = createFileRoute('/dashboard')({ component: Dashboard })
 
-// Demo debt data
-const demoDebts = [
+// Mock workbook data
+const mockWorkbooks = [
   {
-    id: 1,
-    name: 'Credit Card - Chase',
-    interestRate: 18.99,
-    minPayment: 150.0,
-    balance: 5420.0,
-  },
-  {
-    id: 2,
-    name: 'Student Loan',
-    interestRate: 4.5,
-    minPayment: 250.0,
-    balance: 28500.0,
-  },
-  {
-    id: 3,
-    name: 'Car Loan',
-    interestRate: 6.25,
-    minPayment: 425.0,
-    balance: 18200.0,
-  },
-  {
-    id: 4,
-    name: 'Credit Card - Discover',
-    interestRate: 21.49,
-    minPayment: 85.0,
-    balance: 2850.0,
-  },
-  {
-    id: 5,
-    name: 'Personal Loan',
-    interestRate: 9.99,
-    minPayment: 200.0,
-    balance: 8500.0,
+    id: '1',
+    name: 'My Workbook',
+    debtCount: 5,
+    totalBalance: 63470.0,
+    createdAt: new Date('2024-11-01'),
   },
 ]
 
@@ -94,16 +58,10 @@ function Dashboard() {
     return null
   }
 
-  const totalMinPayment = demoDebts.reduce(
-    (sum, debt) => sum + debt.minPayment,
-    0,
-  )
-  const totalBalance = demoDebts.reduce((sum, debt) => sum + debt.balance, 0)
-
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Bar */}
-      <nav className="bg-white">
+      <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-gray-900">
@@ -148,62 +106,64 @@ function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Debts</CardTitle>
-            <CardDescription>
-              Track and manage your debt payoff journey
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Debt Name</TableHead>
-                  <TableHead className="text-right">Interest Rate</TableHead>
-                  <TableHead className="text-right">Min Payment</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {demoDebts.map((debt) => (
-                  <TableRow key={debt.id}>
-                    <TableCell className="font-medium">{debt.name}</TableCell>
-                    <TableCell className="text-right">
-                      {debt.interestRate.toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ${debt.minPayment.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Your Workbooks
+          </h2>
+          <p className="text-gray-600">
+            Manage your debt payoff strategies with workbooks
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {mockWorkbooks.map((workbook) => (
+            <Card
+              key={workbook.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate({ to: `/w/${workbook.id}` })}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <BookOpen className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">{workbook.name}</CardTitle>
+                      <CardDescription className="text-xs mt-1">
+                        Created{' '}
+                        {workbook.createdAt.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Debts</span>
+                    <span className="font-medium">{workbook.debtCount}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Balance</span>
+                    <span className="font-medium">
                       $
-                      {debt.balance.toLocaleString('en-US', {
+                      {workbook.totalBalance.toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell className="font-bold">Total</TableCell>
-                  <TableCell></TableCell>
-                  <TableCell className="text-right font-bold">
-                    ${totalMinPayment.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-bold">
-                    $
-                    {totalBalance.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </CardContent>
-        </Card>
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </main>
     </div>
   )
