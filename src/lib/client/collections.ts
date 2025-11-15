@@ -1,6 +1,7 @@
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/react-db';
 import { workbookSchema } from '../universal/entities';
+import { createWorkbook, updateWorkbook } from '../functions/workbooks';
 
 // Construct absolute URL for Electric sync
 // In browser: uses window.location.origin
@@ -24,5 +25,25 @@ export const workbooksCollection = createCollection(
       params: { table: 'workbooks' },
     },
     getKey: (item) => item.id,
+
+    onInsert: async ({ transaction }) => {
+      const newItem = transaction.mutations[0].modified;
+      const { txid } = await createWorkbook({ data: newItem });
+
+      // Return txid to wait for sync
+      return { txid };
+    },
+
+    onUpdate: async ({ transaction }) => {
+      const { original, changes } = transaction.mutations[0];
+      if (!changes.name) {
+        throw new Error('Name is required');
+      }
+      const { txid } = await updateWorkbook({
+        data: { id: original.id, name: changes.name },
+      });
+
+      return { txid };
+    },
   }),
 );

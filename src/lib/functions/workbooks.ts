@@ -21,7 +21,7 @@ const getTxId = () =>
 
 export const createWorkbook = createServerFn({ method: 'POST' })
   .inputValidator(
-    workbookSchema.pick({ name: true }).extend({
+    workbookSchema.pick({ id: true, name: true }).extend({
       name: workbookSchema.shape.name.optional().default('My Workbook'),
     }),
   )
@@ -29,7 +29,7 @@ export const createWorkbook = createServerFn({ method: 'POST' })
     const user = await authUser();
     const [workbook, [{ txid }]] = await db.$transaction([
       db.workbook.create({
-        data: { name: data.name, ownerId: user.id },
+        data: { ...data, ownerId: user.id },
       }),
       getTxId(),
     ]);

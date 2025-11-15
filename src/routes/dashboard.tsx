@@ -15,11 +15,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { authClient, useSession } from '@/lib/client/auth-client';
 import { workbooksCollection } from '@/lib/client/collections';
-import { createWorkbook } from '@/lib/functions/workbooks';
 import { useLiveQuery } from '@tanstack/react-db';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { BookOpen, ChevronRight, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 
 export const Route = createFileRoute('/dashboard')({
   ssr: false,
@@ -29,7 +29,6 @@ export const Route = createFileRoute('/dashboard')({
 function Dashboard() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -49,15 +48,11 @@ function Dashboard() {
   };
 
   const handleCreateWorkbook = async () => {
-    if (isCreating) return;
-    setIsCreating(true);
-    try {
-      const { workbook } = await createWorkbook({ data: {} });
-      navigate({ to: `/w/${workbook.id}` });
-    } catch (error) {
-      console.error('Failed to create workbook:', error);
-      setIsCreating(false);
-    }
+    workbooksCollection.insert({
+      id: uuidv7(),
+      name: 'My Workbook',
+      createdAt: new Date().toISOString(),
+    });
   };
 
   if (isPending) {
@@ -192,7 +187,7 @@ function Dashboard() {
               </div>
               <div className="text-center">
                 <CardTitle className="text-lg text-gray-600">
-                  {isCreating ? 'Creating...' : 'New Workbook'}
+                  New Workbook
                 </CardTitle>
               </div>
             </div>
