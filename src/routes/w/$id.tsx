@@ -1,10 +1,11 @@
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -21,10 +22,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { authClient, useSession } from '@/lib/client/auth-client'
-import { DebtType } from '@/lib/universal/types'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+} from '@/components/ui/table';
+import { authClient, useSession } from '@/lib/client/auth-client';
+import { debtsCollection } from '@/lib/client/collections';
+import { DebtType } from '@/lib/universal/types';
+import { eq, useLiveQuery } from '@tanstack/react-db';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import Decimal from 'decimal.js';
 import {
   Car,
   ChevronDown,
@@ -32,18 +36,23 @@ import {
   GraduationCap,
   Home,
   MoreVertical,
+  Plus,
   Trash2,
   User,
   Wallet,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+} from 'lucide-react';
+import { useEffect } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 
-export const Route = createFileRoute('/w/$id')({ component: WorkbookDetail })
+export const Route = createFileRoute('/w/$id')({
+  ssr: false,
+  component: WorkbookDetail,
+});
 
 interface DebtTypeOption {
-  value: DebtType
-  label: string
-  icon: React.ComponentType<{ className?: string }>
+  value: DebtType;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const debtTypeOptions: DebtTypeOption[] = [
@@ -53,96 +62,126 @@ const debtTypeOptions: DebtTypeOption[] = [
   { value: DebtType.School, label: 'School', icon: GraduationCap },
   { value: DebtType.Personal, label: 'Personal', icon: User },
   { value: DebtType.Other, label: 'Other', icon: Wallet },
-]
+];
 
-// Demo debt data
-const initialDemoDebts = [
+// Demo debt data template
+const demoDebtsTemplate = [
   {
-    id: 1,
     name: 'Credit Card - Chase',
     type: DebtType.Credit,
-    interestRate: 18.99,
+    rate: 18.99,
     minPayment: 150.0,
     balance: 5420.0,
   },
   {
-    id: 2,
     name: 'Student Loan',
     type: DebtType.School,
-    interestRate: 4.5,
+    rate: 4.5,
     minPayment: 250.0,
     balance: 28500.0,
   },
   {
-    id: 3,
     name: 'Car Loan',
     type: DebtType.Auto,
-    interestRate: 6.25,
+    rate: 6.25,
     minPayment: 425.0,
     balance: 18200.0,
   },
   {
-    id: 4,
     name: 'Credit Card - Discover',
     type: DebtType.Credit,
-    interestRate: 21.49,
+    rate: 21.49,
     minPayment: 85.0,
     balance: 2850.0,
   },
   {
-    id: 5,
     name: 'Personal Loan',
     type: DebtType.Personal,
-    interestRate: 9.99,
+    rate: 9.99,
     minPayment: 200.0,
     balance: 8500.0,
   },
-]
+];
 
 function WorkbookDetail() {
-  const navigate = useNavigate()
-  // const { id } = Route.useParams() // TODO: Use this to fetch workbook data
-  const { data: session, isPending } = useSession()
-  const [debts, setDebts] = useState(initialDemoDebts)
+  const navigate = useNavigate();
+  const { id: workbookId } = Route.useParams();
+  const { data: session, isPending } = useSession();
+
+  // Load debts from the collection using live query
+  const { data: allDebts } = useLiveQuery((q) =>
+    q
+      .from({ debt: debtsCollection })
+      .where(({ debt }) => eq(debt.workbookId, workbookId))
+      .orderBy(({ debt }) => debt.name),
+  );
+
+  // Filter debts by workbookId and ensure numeric fields are numbers
+  const debts = allDebts
+    .filter((debt) => debt.workbookId === workbookId)
+    .map((debt) => ({
+      ...debt,
+      rate: new Decimal(debt.rate),
+      balance: new Decimal(debt.balance),
+      minPayment: new Decimal(debt.minPayment),
+    }));
 
   useEffect(() => {
     if (!isPending && !session) {
-      navigate({ to: '/' })
+      navigate({ to: '/' });
     }
-  }, [session, isPending, navigate])
+  }, [session, isPending, navigate]);
 
   const handleSignOut = async () => {
-    await authClient.signOut()
-    navigate({ to: '/' })
-  }
+    await authClient.signOut();
+    navigate({ to: '/' });
+  };
 
-  const handleTypeChange = (debtId: number, newType: DebtType) => {
-    setDebts((prevDebts) =>
-      prevDebts.map((debt) =>
-        debt.id === debtId ? { ...debt, type: newType } : debt,
-      ),
-    )
-  }
+  const handlePopulateDemoDebts = () => {
+    demoDebtsTemplate.forEach((debt) => {
+      debtsCollection.insert({
+        id: uuidv7(),
+        workbookId,
+        name: debt.name,
+        type: debt.type,
+        rate: debt.rate.toString(),
+        minPayment: debt.minPayment.toString(),
+        balance: debt.balance.toString(),
+        createdAt: new Date().toISOString(),
+      });
+    });
+  };
 
-  const handleDeleteDebt = (debtId: number) => {
-    // TODO: Implement delete functionality
-    console.log('Delete debt:', debtId)
-  }
+  const handleTypeChange = (debtId: string, newType: DebtType) => {
+    debtsCollection.update(debtId, (draft) => {
+      draft.type = newType;
+    });
+  };
+
+  const handleDeleteDebt = (debtId: string) => {
+    debtsCollection.delete(debtId);
+  };
 
   if (isPending) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-600 text-xl">Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!session?.user) {
-    return null
+    return null;
   }
 
-  const totalMinPayment = debts.reduce((sum, debt) => sum + debt.minPayment, 0)
-  const totalBalance = debts.reduce((sum, debt) => sum + debt.balance, 0)
+  const totalMinPayment = debts.reduce(
+    (sum, debt) => sum.add(debt.minPayment),
+    new Decimal(0),
+  );
+  const totalBalance = debts.reduce(
+    (sum, debt) => sum.add(debt.balance),
+    new Decimal(0),
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -202,10 +241,20 @@ function WorkbookDetail() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Card>
           <CardHeader>
-            <CardTitle>Your Debts</CardTitle>
-            <CardDescription>
-              Track and manage your debt payoff journey
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Debts</CardTitle>
+                <CardDescription>
+                  Track and manage your debt payoff journey
+                </CardDescription>
+              </div>
+              {debts.length === 0 && (
+                <Button onClick={handlePopulateDemoDebts} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Demo Debts
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -223,8 +272,8 @@ function WorkbookDetail() {
                 {debts.map((debt) => {
                   const currentType = debtTypeOptions.find(
                     (opt) => opt.value === debt.type,
-                  )
-                  const Icon = currentType?.icon || Wallet
+                  );
+                  const Icon = currentType?.icon || Wallet;
 
                   return (
                     <TableRow key={debt.id}>
@@ -242,7 +291,7 @@ function WorkbookDetail() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
                             {debtTypeOptions.map((option) => {
-                              const OptionIcon = option.icon
+                              const OptionIcon = option.icon;
                               return (
                                 <DropdownMenuItem
                                   key={option.value}
@@ -253,23 +302,19 @@ function WorkbookDetail() {
                                   <OptionIcon className="h-4 w-4 mr-2" />
                                   {option.label}
                                 </DropdownMenuItem>
-                              )
+                              );
                             })}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                       <TableCell className="text-right">
-                        {debt.interestRate.toFixed(2)}%
+                        {debt.rate.toFixed(2)}%
                       </TableCell>
                       <TableCell className="text-right">
                         ${debt.minPayment.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
-                        $
-                        {debt.balance.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${debt.balance.toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -290,7 +335,7 @@ function WorkbookDetail() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
               <TableFooter>
@@ -302,11 +347,7 @@ function WorkbookDetail() {
                     ${totalMinPayment.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right font-bold">
-                    $
-                    {totalBalance.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    ${totalBalance.toFixed(2)}
                   </TableCell>
                   <TableCell></TableCell>
                 </TableRow>
@@ -316,5 +357,5 @@ function WorkbookDetail() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

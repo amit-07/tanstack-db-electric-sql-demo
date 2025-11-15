@@ -1,7 +1,8 @@
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/react-db';
-import { workbookSchema } from '../universal/entities';
+import { workbookSchema, debtSchema } from '../universal/entities';
 import { createWorkbook, updateWorkbook } from '../functions/workbooks';
+import { createDebt, updateDebt, deleteDebt } from '../functions/debts';
 
 // Construct absolute URL for Electric sync
 // In browser: uses window.location.origin
@@ -30,7 +31,6 @@ export const workbooksCollection = createCollection(
       const newItem = transaction.mutations[0].modified;
       const { txid } = await createWorkbook({ data: newItem });
 
-      // Return txid to wait for sync
       return { txid };
     },
 
@@ -41,6 +41,46 @@ export const workbooksCollection = createCollection(
       }
       const { txid } = await updateWorkbook({
         data: { id: original.id, name: changes.name },
+      });
+
+      return { txid };
+    },
+  }),
+);
+
+export const debtsCollection = createCollection(
+  electricCollectionOptions({
+    id: 'debts',
+    schema: debtSchema,
+    shapeOptions: {
+      url: getElectricUrl(),
+      params: { table: 'debts' },
+    },
+    getKey: (item) => item.id,
+
+    onInsert: async ({ transaction }) => {
+      const newItem = transaction.mutations[0].modified;
+      const { txid } = await createDebt({ data: newItem });
+
+      return { txid };
+    },
+
+    onUpdate: async ({ transaction }) => {
+      const { original, changes } = transaction.mutations[0];
+      const { txid } = await updateDebt({
+        data: {
+          id: original.id,
+          ...changes,
+        },
+      });
+
+      return { txid };
+    },
+
+    onDelete: async ({ transaction }) => {
+      const deletedItem = transaction.mutations[0].original;
+      const { txid } = await deleteDebt({
+        data: { id: deletedItem.id },
       });
 
       return { txid };
