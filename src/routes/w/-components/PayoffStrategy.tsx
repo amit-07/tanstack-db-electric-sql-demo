@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { PayoffStrategyType } from '@/lib/universal/types';
 import Decimal from 'decimal.js';
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, Info } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface PayoffStrategyProps {
   strategy: PayoffStrategyType;
@@ -24,85 +24,144 @@ export function PayoffStrategy({
   onTotalMonthlyPaymentChange,
   totalMinPayment,
 }: PayoffStrategyProps) {
+  // Local state to allow free typing without interference
+  const [localValue, setLocalValue] = useState(totalMonthlyPayment.toFixed(2));
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Sync local value when prop changes (but not while user is typing)
+  useEffect(() => {
+    if (!isFocused) {
+      setLocalValue(totalMonthlyPayment.toFixed(2));
+    }
+  }, [totalMonthlyPayment, isFocused]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalValue(value);
+    // Update parent immediately for real-time calculations
+    onTotalMonthlyPaymentChange(
+      value === '' ? new Decimal(0) : new Decimal(value),
+    );
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    // Ensure value is properly formatted on blur
+    const numValue = localValue === '' ? 0 : Number(localValue);
+    if (isNaN(numValue) || numValue < 0) {
+      setLocalValue(totalMonthlyPayment.toFixed(2));
+      onTotalMonthlyPaymentChange(totalMonthlyPayment);
+    } else {
+      setLocalValue(new Decimal(numValue).toFixed(2));
+      onTotalMonthlyPaymentChange(new Decimal(numValue));
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Payoff Strategy</CardTitle>
-        <CardDescription>
-          Choose a strategy and set your monthly payment
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Strategy Selector */}
-        <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
-            Strategy
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mt-3">
+      <div className="flex items-start gap-4">
+        {/* Monthly Budget Input - Left Side */}
+        <div className="flex-1 min-w-0">
+          <label
+            htmlFor="monthly-payment"
+            className="text-[10px] font-semibold text-gray-400 block mb-1.5"
+          >
+            Monthly Budget
           </label>
-          <div className="flex gap-2">
-            <Button
-              variant={
-                strategy === PayoffStrategyType.Avalanche
-                  ? 'default'
-                  : 'outline'
-              }
-              onClick={() => onStrategyChange(PayoffStrategyType.Avalanche)}
-              className="flex-1"
-            >
-              Avalanche (Highest Rate First)
-            </Button>
-            <Button
-              variant={
-                strategy === PayoffStrategyType.Snowball ? 'default' : 'outline'
-              }
-              onClick={() => onStrategyChange(PayoffStrategyType.Snowball)}
-              className="flex-1"
-            >
-              Snowball (Lowest Balance First)
-            </Button>
+          <div className="relative group mb-1.5">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium group-focus-within:text-indigo-600 transition-colors text-sm">
+              $
+            </div>
+            <input
+              id="monthly-payment"
+              type="number"
+              step="0.01"
+              min="0"
+              value={localValue}
+              onChange={handleChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              className="w-full pl-6 pr-3 py-2 bg-gray-50 border-0 rounded-xl text-base font-bold text-gray-900 focus:ring-2 focus:ring-indigo-100 focus:bg-white transition-all outline-none placeholder-gray-300"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] text-gray-400 font-medium">
+              Min: ${totalMinPayment.toFixed(0)}
+            </p>
+            {totalMonthlyPayment.gt(0) &&
+              totalMonthlyPayment.lt(totalMinPayment) && (
+                <p className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                  Too low
+                </p>
+              )}
           </div>
         </div>
 
-        {/* Monthly Payment Input */}
-        <div>
-          <label
-            htmlFor="monthly-payment"
-            className="text-sm font-medium text-gray-700 mb-2 block"
-          >
-            Total Monthly Payment
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                $
-              </span>
-              <input
-                id="monthly-payment"
-                type="number"
-                step="0.01"
-                min="0"
-                value={totalMonthlyPayment.toFixed(2)}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  onTotalMonthlyPaymentChange(
-                    value === '' ? new Decimal(0) : new Decimal(value),
-                  );
-                }}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              />
-            </div>
+        {/* Strategy Selector - Right Side */}
+        <div className="w-[140px] flex-none">
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className="text-[10px] font-semibold text-gray-400">
+              Strategy
+            </span>
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-gray-300 hover:text-gray-500 cursor-help transition-colors" />
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="max-w-[200px] text-xs p-3"
+                >
+                  {strategy === PayoffStrategyType.Avalanche
+                    ? 'Avalanche focuses on highest interest rates first to save the most money on interest.'
+                    : 'Snowball focuses on smallest balances first to build momentum with quick wins.'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          {totalMonthlyPayment.gt(0) &&
-            totalMonthlyPayment.lt(totalMinPayment) && (
-              <p className="text-sm text-red-600 mt-1">
-                Payment must be at least ${totalMinPayment.toFixed(2)} (sum of
-                minimum payments)
-              </p>
-            )}
-          <p className="text-sm text-gray-500 mt-1">
-            Minimum required: ${totalMinPayment.toFixed(2)}
-          </p>
+
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => onStrategyChange(PayoffStrategyType.Avalanche)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all w-full text-left ${
+                strategy === PayoffStrategyType.Avalanche
+                  ? 'bg-indigo-50 border-indigo-100 text-indigo-700 shadow-sm'
+                  : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200'
+              }`}
+            >
+              <ArrowDownNarrowWide
+                className={`h-3.5 w-3.5 ${
+                  strategy === PayoffStrategyType.Avalanche
+                    ? 'text-indigo-500'
+                    : 'text-gray-400'
+                }`}
+              />
+              Avalanche
+            </button>
+            <button
+              onClick={() => onStrategyChange(PayoffStrategyType.Snowball)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all w-full text-left ${
+                strategy === PayoffStrategyType.Snowball
+                  ? 'bg-indigo-50 border-indigo-100 text-indigo-700 shadow-sm'
+                  : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200'
+              }`}
+            >
+              <ArrowUpNarrowWide
+                className={`h-3.5 w-3.5 ${
+                  strategy === PayoffStrategyType.Snowball
+                    ? 'text-indigo-500'
+                    : 'text-gray-400'
+                }`}
+              />
+              Snowball
+            </button>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

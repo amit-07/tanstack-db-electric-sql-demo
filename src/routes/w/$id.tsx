@@ -57,10 +57,12 @@ function WorkbookDetail() {
     new Decimal(0),
   );
   useEffect(() => {
+    // Only auto-update when totalMinPayment increases, not when user is typing
     if (totalMinPayment.gt(totalMonthlyPayment)) {
       setTotalMonthlyPayment(totalMinPayment);
     }
-  }, [totalMinPayment, totalMonthlyPayment]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalMinPayment]);
 
   // Calculate payoff schedule
   const payoffSchedule = useMemo(() => {
@@ -109,6 +111,17 @@ function WorkbookDetail() {
     });
   };
 
+  const handleUpdateDebt = (
+    debtId: string,
+    field: 'name' | 'balance' | 'minPayment' | 'rate',
+    value: string | number,
+  ) => {
+    debtsCollection.update(debtId, (draft) => {
+      // @ts-ignore - dynamic assignment
+      draft[field] = value;
+    });
+  };
+
   const handleDeleteDebt = (debtId: string) => {
     debtsCollection.delete(debtId);
   };
@@ -126,51 +139,72 @@ function WorkbookDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-screen flex flex-col bg-gray-50/50 overflow-hidden">
       <WorkbookNavBar user={session.user} />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <DebtsList
-          debts={debts}
-          onPopulateDemoDebts={handlePopulateDemoDebts}
-          onTypeChange={handleTypeChange}
-          onDeleteDebt={handleDeleteDebt}
-        />
-
-        {/* Payoff Strategy and Calculator */}
-        {debts.length > 0 && (
-          <>
-            <PayoffStrategy
-              strategy={strategy}
-              onStrategyChange={setStrategy}
-              totalMonthlyPayment={totalMonthlyPayment}
-              onTotalMonthlyPaymentChange={(value) =>
-                setTotalMonthlyPayment(value)
-              }
-              totalMinPayment={totalMinPayment}
-            />
-
-            {/* Payoff Summary */}
-            {payoffSchedule && (
-              <PayoffSummary
-                payoffSchedule={payoffSchedule}
-                strategy={strategy}
-              />
-            )}
-
-            {/* Payoff Table */}
-            {payoffSchedule && (
-              <PayoffSchedule
-                payoffSchedule={payoffSchedule}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-8 py-6 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+          {/* Left Column: Data Entry */}
+          <div className="lg:col-span-1 h-full flex flex-col min-h-0 pr-2">
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <DebtsList
                 debts={debts}
-                strategy={strategy}
-                showAllMonths={showAllMonths}
-                onShowAllMonthsChange={setShowAllMonths}
+                onPopulateDemoDebts={handlePopulateDemoDebts}
+                onTypeChange={handleTypeChange}
+                onUpdateDebt={handleUpdateDebt}
+                onDeleteDebt={handleDeleteDebt}
               />
+            </div>
+            <div className="flex-none">
+              <PayoffStrategy
+                strategy={strategy}
+                onStrategyChange={setStrategy}
+                totalMonthlyPayment={totalMonthlyPayment}
+                onTotalMonthlyPaymentChange={(value) =>
+                  setTotalMonthlyPayment(value)
+                }
+                totalMinPayment={totalMinPayment}
+              />
+            </div>
+          </div>
+
+          {/* Right Column: Stats & Visualization */}
+          <div className="lg:col-span-2 h-full overflow-y-auto pr-2 pb-8 space-y-6">
+            {debts.length > 0 ? (
+              <>
+                {/* Payoff Summary */}
+                {payoffSchedule && (
+                  <PayoffSummary
+                    payoffSchedule={payoffSchedule}
+                    strategy={strategy}
+                  />
+                )}
+
+                {/* Payoff Table */}
+                {payoffSchedule && (
+                  <PayoffSchedule
+                    payoffSchedule={payoffSchedule}
+                    debts={debts}
+                    strategy={strategy}
+                    showAllMonths={showAllMonths}
+                    onShowAllMonthsChange={setShowAllMonths}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Ready to be debt-free?
+                </h3>
+                <p className="text-gray-500 max-w-md">
+                  Add your debts on the left to generate your personalized
+                  payoff plan.
+                </p>
+              </div>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </main>
     </div>
   );
