@@ -31,6 +31,7 @@ export interface PayoffScheduleResult {
   totalInterestPaid: Decimal;
   debtFreeDate: string;
   monthsToPayoff: number;
+  sortedDebts: Debt[];
 }
 
 export interface DebtProps {
@@ -218,11 +219,21 @@ export class PayoffCalculator {
     const sortedCells = [...period.cells].filter((c) => c.startBalance.gt(0));
 
     if (this.strategy === PayoffStrategyType.Avalanche) {
-      // Highest rate first
-      sortedCells.sort((a, b) => b.debt.rate.cmp(a.debt.rate));
+      // Highest rate first, then smallest balance for tie-breaker
+      sortedCells.sort((a, b) => {
+        const rateCmp = b.debt.rate.cmp(a.debt.rate);
+        if (rateCmp !== 0) return rateCmp;
+        // If rates are equal, smallest balance first
+        return a.startBalance.cmp(b.startBalance);
+      });
     } else {
-      // Lowest balance first (Snowball)
-      sortedCells.sort((a, b) => a.startBalance.cmp(b.startBalance));
+      // Lowest balance first (Snowball), then highest rate for tie-breaker
+      sortedCells.sort((a, b) => {
+        const balanceCmp = a.startBalance.cmp(b.startBalance);
+        if (balanceCmp !== 0) return balanceCmp;
+        // If balances are equal, highest rate first
+        return b.debt.rate.cmp(a.debt.rate);
+      });
     }
 
     // 3. Apply extra payments
@@ -230,6 +241,30 @@ export class PayoffCalculator {
       if (extraMoney.lte(0)) break;
       extraMoney = cell.addPayment(extraMoney);
     }
+  }
+
+  private getSortedDebts(): Debt[] {
+    const sortedDebts = [...this.debts];
+
+    if (this.strategy === PayoffStrategyType.Avalanche) {
+      // Highest rate first, then smallest balance for tie-breaker
+      sortedDebts.sort((a, b) => {
+        const rateCmp = b.rate.cmp(a.rate);
+        if (rateCmp !== 0) return rateCmp;
+        // If rates are equal, smallest balance first
+        return a.startBalance.cmp(b.startBalance);
+      });
+    } else {
+      // Lowest balance first (Snowball), then highest rate for tie-breaker
+      sortedDebts.sort((a, b) => {
+        const balanceCmp = a.startBalance.cmp(b.startBalance);
+        if (balanceCmp !== 0) return balanceCmp;
+        // If balances are equal, highest rate first
+        return b.rate.cmp(a.rate);
+      });
+    }
+
+    return sortedDebts;
   }
 
   private formatResult(periods: Period[]): PayoffScheduleResult {
@@ -261,6 +296,7 @@ export class PayoffCalculator {
       totalInterestPaid,
       debtFreeDate: finalPeriod.month.toString(),
       monthsToPayoff: periods.length,
+      sortedDebts: this.getSortedDebts(),
     };
   }
 }

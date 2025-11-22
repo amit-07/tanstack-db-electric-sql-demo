@@ -205,7 +205,6 @@ function WorkbookDetail() {
                     <PayoffSchedule
                       payoffSchedule={payoffSchedule}
                       debts={debts}
-                      strategy={strategy}
                       showAllMonths={showAllMonths}
                       onShowAllMonthsChange={setShowAllMonths}
                     />

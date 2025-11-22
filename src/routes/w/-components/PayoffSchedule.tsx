@@ -8,7 +8,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PayoffScheduleResult } from '@/lib/universal/payoff';
-import { PayoffStrategyType } from '@/lib/universal/types';
 import { Temporal } from '@js-temporal/polyfill';
 import { useMemo } from 'react';
 import { WorkbookDebt } from './DebtsList';
@@ -16,7 +15,6 @@ import { WorkbookDebt } from './DebtsList';
 interface PayoffScheduleProps {
   payoffSchedule: PayoffScheduleResult;
   debts: WorkbookDebt[];
-  strategy: PayoffStrategyType;
   showAllMonths: boolean;
   onShowAllMonthsChange: (show: boolean) => void;
 }
@@ -24,7 +22,6 @@ interface PayoffScheduleProps {
 export function PayoffSchedule({
   payoffSchedule,
   debts,
-  strategy,
   showAllMonths,
   onShowAllMonthsChange,
 }: PayoffScheduleProps) {
@@ -34,14 +31,16 @@ export function PayoffSchedule({
     return payoffSchedule.months.slice(0, 24);
   }, [payoffSchedule, showAllMonths]);
 
-  // Order debts based on strategy for table display
+  // Order debts based on sortedDebts from payoff calculator
   const orderedDebts = useMemo(() => {
-    if (strategy === PayoffStrategyType.Avalanche) {
-      return [...debts].sort((a, b) => b.rate.cmp(a.rate));
-    } else {
-      return [...debts].sort((a, b) => a.balance.cmp(b.balance));
-    }
-  }, [debts, strategy]);
+    // Create a map of debt ID to WorkbookDebt for quick lookup
+    const debtMap = new Map(debts.map((debt) => [debt.id, debt]));
+
+    // Map sortedDebts from payoff result to WorkbookDebt objects
+    return payoffSchedule.sortedDebts
+      .map((sortedDebt) => debtMap.get(sortedDebt.id))
+      .filter((debt): debt is WorkbookDebt => debt !== undefined);
+  }, [debts, payoffSchedule.sortedDebts]);
 
   return (
     <div className="bg-card rounded-2xl overflow-hidden border border-border">
