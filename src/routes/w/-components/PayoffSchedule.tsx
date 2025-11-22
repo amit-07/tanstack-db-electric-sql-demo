@@ -44,26 +44,26 @@ export function PayoffSchedule({
   }, [debts, strategy]);
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30">
-        <h3 className="text-lg font-bold text-gray-800">Payoff Schedule</h3>
+    <div className="bg-card rounded-3xl overflow-hidden shadow-sm border border-border">
+      <div className="px-6 py-4 border-b border-border bg-muted/30">
+        <h3 className="text-lg font-bold text-foreground">Payoff Schedule</h3>
       </div>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-gray-50/50">
-            <TableRow className="hover:bg-transparent border-b-gray-100">
-              <TableHead className="w-32 pl-6 py-3 text-xs font-semibold text-gray-500">
+          <TableHeader className="bg-muted/50">
+            <TableRow className="hover:bg-transparent border-b-border">
+              <TableHead className="w-32 pl-6 py-3 text-xs font-semibold text-muted-foreground">
                 Month
               </TableHead>
               {orderedDebts.map((debt) => (
                 <TableHead
                   key={debt.id}
-                  className="text-center min-w-[120px] py-3 text-xs font-semibold text-gray-500"
+                  className="text-center min-w-[120px] py-3 text-xs font-semibold text-muted-foreground"
                 >
                   {debt.name}
                 </TableHead>
               ))}
-              <TableHead className="text-center min-w-[120px] bg-gray-50/80 py-3 text-xs font-semibold text-gray-500">
+              <TableHead className="text-center min-w-[120px] bg-muted/80 py-3 text-xs font-semibold text-muted-foreground">
                 Total
               </TableHead>
             </TableRow>
@@ -75,9 +75,9 @@ export function PayoffSchedule({
               return (
                 <TableRow
                   key={month.month}
-                  className={`hover:bg-gray-50/50 border-b-gray-50 ${isJanuary ? 'border-t-2 border-t-gray-200' : ''}`}
+                  className={`hover:bg-muted/50 border-b-muted/50 ${isJanuary ? 'border-t-2 border-t-border' : ''}`}
                 >
-                  <TableCell className="font-semibold text-sm text-gray-700 pl-6 py-3">
+                  <TableCell className="font-semibold text-sm text-foreground/80 pl-6 py-3">
                     {monthDate.toPlainDate({ day: 1 }).toLocaleString('en-US', {
                       month: 'short',
                       year: 'numeric',
@@ -118,7 +118,7 @@ export function PayoffSchedule({
                           <div
                             className={`text-[10px] font-medium px-1.5 py-px rounded-full ${
                               payment.isMinimum
-                                ? 'bg-gray-100 text-gray-400'
+                                ? 'bg-muted text-muted-foreground'
                                 : 'bg-green-50 text-green-700'
                             }`}
                           >
@@ -133,7 +133,7 @@ export function PayoffSchedule({
                                     maximumFractionDigits: 0,
                                   })}
                           </div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-foreground">
                             {payment.newBalance
                               .toNumber()
                               .toLocaleString('en-US', {
@@ -147,8 +147,8 @@ export function PayoffSchedule({
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center bg-gray-50/30 py-3">
-                    <div className="text-sm font-bold text-gray-900">
+                  <TableCell className="text-center bg-muted/30 py-3">
+                    <div className="text-sm font-bold text-foreground">
                       {month.remainingBalance
                         .toNumber()
                         .toLocaleString('en-US', {
@@ -168,12 +168,12 @@ export function PayoffSchedule({
 
       {/* Show More/Less Button */}
       {payoffSchedule.months.length > 24 && (
-        <div className="p-4 text-center border-t border-gray-50 bg-gray-50/10">
+        <div className="p-4 text-center border-t border-border bg-muted/10">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onShowAllMonthsChange(!showAllMonths)}
-            className="rounded-full text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-8"
+            className="rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted h-8"
           >
             {showAllMonths
               ? 'Show Less'

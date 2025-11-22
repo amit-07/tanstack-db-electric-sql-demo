@@ -54,17 +54,17 @@ export function WorkbookCard({ workbook }: WorkbookCardProps) {
                 </CardDescription>
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground/50" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Debts</span>
+              <span className="text-muted-foreground">Debts</span>
               <span className="font-medium">{debts.length}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Total Balance</span>
+              <span className="text-muted-foreground">Total Balance</span>
               <span className="font-medium">
                 {totalBalance.toNumber().toLocaleString('en-US', {
                   style: 'currency',

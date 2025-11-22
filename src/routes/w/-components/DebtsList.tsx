@@ -86,17 +86,19 @@ const EditableCell = ({
   return (
     <div className={`flex items-center group ${className}`}>
       {prefix && (
-        <span className="text-gray-400 text-xs mr-1 select-none">{prefix}</span>
+        <span className="text-muted-foreground text-xs mr-1 select-none">
+          {prefix}
+        </span>
       )}
       <input
         type={type}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={handleBlur}
-        className={`bg-transparent border-none p-0 h-auto focus:ring-0 w-full text-sm font-medium text-gray-900 placeholder:text-gray-300 focus:outline-none min-w-[20px]`}
+        className={`bg-transparent border-none p-0 h-auto focus:ring-0 w-full text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-[20px]`}
       />
       {suffix && (
-        <span className="text-gray-400 text-xs ml-0.5 select-none">
+        <span className="text-muted-foreground text-xs ml-0.5 select-none">
           {suffix}
         </span>
       )}
@@ -121,9 +123,9 @@ export function DebtsList({
   );
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/30">
-        <h2 className="text-lg font-semibold text-gray-900">Debts</h2>
+    <div className="h-full flex flex-col bg-card rounded-2xl border border-border shadow-sm mb-1">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30 rounded-t-2xl">
+        <h2 className="text-lg font-semibold text-foreground">Debts</h2>
         {debts.length === 0 && (
           <Button
             onClick={onPopulateDemoDebts}
@@ -147,8 +149,8 @@ export function DebtsList({
           return (
             <div
               key={debt.id}
-              className={`group relative bg-white p-4 hover:bg-gray-50/50 transition-all ${
-                index !== debts.length - 1 ? 'border-b border-gray-100' : ''
+              className={`group relative bg-card p-4 hover:bg-muted/30 transition-all ${
+                index !== debts.length - 1 ? 'border-b border-border' : ''
               }`}
             >
               {/* Top Row: Icon, Name, Actions */}
@@ -156,7 +158,7 @@ export function DebtsList({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors focus:outline-none"
+                      className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
                       title={currentType?.label}
                     >
                       <Icon className="h-4 w-4" />
@@ -164,7 +166,7 @@ export function DebtsList({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
-                    className="rounded-xl border-gray-100 shadow-lg"
+                    className="rounded-xl border-border shadow-lg"
                   >
                     {debtTypeOptions.map((option) => {
                       const OptionIcon = option.icon;
@@ -173,7 +175,7 @@ export function DebtsList({
                           key={option.value}
                           onClick={() => onTypeChange(debt.id, option.value)}
                         >
-                          <OptionIcon className="h-4 w-4 mr-2 text-gray-500" />
+                          <OptionIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                           {option.label}
                         </DropdownMenuItem>
                       );
@@ -187,23 +189,23 @@ export function DebtsList({
                     onSave={(val) =>
                       onUpdateDebt(debt.id, 'name', val as string)
                     }
-                    className="text-base font-semibold text-gray-900"
+                    className="text-base font-semibold text-foreground"
                   />
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-1.5 rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors focus:outline-none">
+                    <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="rounded-xl border-gray-100 shadow-lg"
+                    className="rounded-xl border-border shadow-lg"
                   >
                     <DropdownMenuItem
                       onClick={() => onDeleteDebt(debt.id)}
-                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Debt
@@ -215,7 +217,7 @@ export function DebtsList({
               {/* Bottom Row: Values */}
               <div className="grid grid-cols-3 gap-4 pl-11">
                 <div>
-                  <div className="text-[10px] font-semibold text-gray-400 mb-0.5">
+                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                     Balance
                   </div>
                   <EditableCell
@@ -225,11 +227,11 @@ export function DebtsList({
                     onSave={(val) =>
                       onUpdateDebt(debt.id, 'balance', val as number)
                     }
-                    className="text-sm text-gray-700"
+                    className="text-sm text-foreground/80"
                   />
                 </div>
                 <div>
-                  <div className="text-[10px] font-semibold text-gray-400 mb-0.5">
+                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                     Rate
                   </div>
                   <EditableCell
@@ -239,11 +241,11 @@ export function DebtsList({
                     onSave={(val) =>
                       onUpdateDebt(debt.id, 'rate', val as number)
                     }
-                    className="text-sm text-gray-700"
+                    className="text-sm text-foreground/80"
                   />
                 </div>
                 <div>
-                  <div className="text-[10px] font-semibold text-gray-400 mb-0.5">
+                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                     Min Pay
                   </div>
                   <EditableCell
@@ -253,7 +255,7 @@ export function DebtsList({
                     onSave={(val) =>
                       onUpdateDebt(debt.id, 'minPayment', val as number)
                     }
-                    className="text-sm text-gray-700"
+                    className="text-sm text-foreground/80"
                   />
                 </div>
               </div>
@@ -262,22 +264,22 @@ export function DebtsList({
         })}
 
         {debts.length === 0 && (
-          <div className="flex flex-col items-center justify-center text-center p-8 text-gray-400">
+          <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
             <p className="text-sm">No debts added yet</p>
           </div>
         )}
       </div>
 
       {debts.length > 0 && (
-        <div className="bg-gray-50 border-t border-gray-100 p-4">
+        <div className="bg-muted/20 border-t border-border p-4 rounded-b-2xl">
           <div className="flex justify-between items-center text-sm">
-            <span className="font-medium text-gray-500">Total</span>
+            <span className="font-medium text-muted-foreground">Total</span>
             <div className="flex gap-6">
               <div className="text-right">
-                <span className="block text-[10px] font-semibold text-gray-400">
+                <span className="block text-[10px] font-semibold text-muted-foreground">
                   Balance
                 </span>
-                <span className="font-bold text-gray-900">
+                <span className="font-bold text-foreground">
                   {totalBalance.toNumber().toLocaleString('en-US', {
                     style: 'currency',
                     currency: 'USD',
@@ -286,10 +288,10 @@ export function DebtsList({
                 </span>
               </div>
               <div className="text-right">
-                <span className="block text-[10px] font-semibold text-gray-400">
+                <span className="block text-[10px] font-semibold text-muted-foreground">
                   Min Pay
                 </span>
-                <span className="font-bold text-gray-900">
+                <span className="font-bold text-foreground">
                   {totalMinPayment.toNumber().toLocaleString('en-US', {
                     style: 'currency',
                     currency: 'USD',

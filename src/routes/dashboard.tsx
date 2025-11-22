@@ -63,17 +63,17 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-foreground">
               Debt Payoff Calculator
             </h1>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none focus:ring-2 focus:ring-gray-200 rounded-full">
+                <button className="focus:outline-none focus:ring-2 focus:ring-border rounded-full">
                   {session.user.image ? (
                     <img
                       src={session.user.image}
@@ -81,8 +81,8 @@ function Dashboard() {
                       className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors">
-                      <span className="text-gray-600 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
+                      <span className="text-muted-foreground font-medium">
                         {session.user.name?.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -111,10 +111,10 @@ function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
             Your Workbooks
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Manage your debt payoff strategies with workbooks
           </p>
         </div>
@@ -126,15 +126,15 @@ function Dashboard() {
 
           {/* New Workbook Button */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all border-2 border-dashed border-gray-300 bg-gray-50/50 hover:bg-gray-100/50 hover:border-gray-400 flex items-center justify-center"
+            className="cursor-pointer hover:shadow-lg transition-all border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-muted-foreground/50 flex items-center justify-center"
             onClick={handleCreateWorkbook}
           >
             <div className="flex flex-col items-center gap-3 p-4">
-              <div className="p-3 bg-gray-200/70 rounded-lg">
-                <Plus className="h-8 w-8 text-gray-500" />
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <Plus className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="text-center">
-                <CardTitle className="text-lg text-gray-600">
+                <CardTitle className="text-lg text-muted-foreground">
                   New Workbook
                 </CardTitle>
               </div>

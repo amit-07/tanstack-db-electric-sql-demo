@@ -62,18 +62,18 @@ export function PayoffStrategy({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mt-3">
+    <div className="bg-card rounded-2xl p-4 shadow-sm border border-border mt-3">
       <div className="flex items-start gap-4">
         {/* Monthly Budget Input - Left Side */}
         <div className="flex-1 min-w-0">
           <label
             htmlFor="monthly-payment"
-            className="text-[10px] font-semibold text-gray-400 block mb-1.5"
+            className="text-[10px] font-semibold text-muted-foreground block mb-1.5"
           >
             Monthly Budget
           </label>
           <div className="relative group mb-1.5">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium group-focus-within:text-indigo-600 transition-colors text-sm">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium group-focus-within:text-primary transition-colors text-sm">
               $
             </div>
             <input
@@ -85,16 +85,16 @@ export function PayoffStrategy({
               onChange={handleChange}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              className="w-full pl-6 pr-3 py-2 bg-gray-50 border-0 rounded-xl text-base font-bold text-gray-900 focus:ring-2 focus:ring-indigo-100 focus:bg-white transition-all outline-none placeholder-gray-300"
+              className="w-full pl-6 pr-3 py-2 bg-muted/30 border-0 rounded-xl text-base font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all outline-none placeholder:text-muted-foreground/50"
             />
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-[10px] text-gray-400 font-medium">
+            <p className="text-[10px] text-muted-foreground font-medium">
               Min: ${totalMinPayment.toFixed(0)}
             </p>
             {totalMonthlyPayment.gt(0) &&
               totalMonthlyPayment.lt(totalMinPayment) && (
-                <p className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                <p className="text-[10px] text-destructive font-bold bg-destructive/10 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                   Too low
                 </p>
               )}

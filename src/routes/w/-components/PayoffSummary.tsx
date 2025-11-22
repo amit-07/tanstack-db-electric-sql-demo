@@ -37,14 +37,14 @@ export function PayoffSummary({
       </Card>
 
       {/* Time to Payoff */}
-      <Card className="border-0 shadow-sm bg-white rounded-3xl overflow-hidden">
+      <Card className="border-0 shadow-sm bg-card rounded-3xl overflow-hidden">
         <CardContent className="px-6 py-3">
-          <div className="text-gray-400 text-xs font-semibold mb-0.5">
+          <div className="text-muted-foreground text-xs font-semibold mb-0.5">
             Time to Payoff
           </div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-3xl font-bold text-foreground">
             {payoffSchedule.monthsToPayoff}{' '}
-            <span className="text-lg text-gray-400 font-medium">
+            <span className="text-lg text-muted-foreground font-medium">
               {payoffSchedule.monthsToPayoff === 1 ? 'month' : 'months'}
             </span>
           </div>
@@ -56,12 +56,12 @@ export function PayoffSummary({
       </Card>
 
       {/* Total Interest */}
-      <Card className="border-0 shadow-sm bg-white rounded-3xl overflow-hidden">
+      <Card className="border-0 shadow-sm bg-card rounded-3xl overflow-hidden">
         <CardContent className="px-6 py-3">
-          <div className="text-gray-400 text-xs font-semibold mb-0.5">
+          <div className="text-muted-foreground text-xs font-semibold mb-0.5">
             Total Interest
           </div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-3xl font-bold text-foreground">
             {payoffSchedule.totalInterestPaid
               .toNumber()
               .toLocaleString('en-US', {
@@ -70,7 +70,7 @@ export function PayoffSummary({
                 maximumFractionDigits: 0,
               })}
           </div>
-          <div className="mt-0.5 text-gray-400 text-sm font-medium">
+          <div className="mt-0.5 text-muted-foreground text-sm font-medium">
             Estimated cost
           </div>
         </CardContent>

@@ -139,70 +139,76 @@ function WorkbookDetail() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50/50 overflow-hidden">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <WorkbookNavBar user={session.user} />
 
       {/* Main Content */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-8 py-6 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+      <main className="flex-1 w-full mx-auto overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
           {/* Left Column: Data Entry */}
-          <div className="lg:col-span-1 h-full flex flex-col min-h-0 pr-2">
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <DebtsList
-                debts={debts}
-                onPopulateDemoDebts={handlePopulateDemoDebts}
-                onTypeChange={handleTypeChange}
-                onUpdateDebt={handleUpdateDebt}
-                onDeleteDebt={handleDeleteDebt}
-              />
+          <div className="lg:col-span-1 h-full flex flex-col min-h-0 bg-muted/30">
+            <div className="flex-1 overflow-hidden min-h-0 pt-4 px-4 lg:pt-6 lg:px-6 pb-0.5">
+              <div className="max-w-xl ml-auto mr-auto lg:mr-0 h-full">
+                <DebtsList
+                  debts={debts}
+                  onPopulateDemoDebts={handlePopulateDemoDebts}
+                  onTypeChange={handleTypeChange}
+                  onUpdateDebt={handleUpdateDebt}
+                  onDeleteDebt={handleDeleteDebt}
+                />
+              </div>
             </div>
-            <div className="flex-none">
-              <PayoffStrategy
-                strategy={strategy}
-                onStrategyChange={setStrategy}
-                totalMonthlyPayment={totalMonthlyPayment}
-                onTotalMonthlyPaymentChange={(value) =>
-                  setTotalMonthlyPayment(value)
-                }
-                totalMinPayment={totalMinPayment}
-              />
+            <div className="flex-none px-4 lg:px-6 pt-3 pb-4 lg:pb-6">
+              <div className="max-w-xl ml-auto mr-auto lg:mr-0">
+                <PayoffStrategy
+                  strategy={strategy}
+                  onStrategyChange={setStrategy}
+                  totalMonthlyPayment={totalMonthlyPayment}
+                  onTotalMonthlyPaymentChange={(value) =>
+                    setTotalMonthlyPayment(value)
+                  }
+                  totalMinPayment={totalMinPayment}
+                />
+              </div>
             </div>
           </div>
 
           {/* Right Column: Stats & Visualization */}
-          <div className="lg:col-span-2 h-full overflow-y-auto pr-2 pb-8 space-y-6">
-            {debts.length > 0 ? (
-              <>
-                {/* Payoff Summary */}
-                {payoffSchedule && (
-                  <PayoffSummary
-                    payoffSchedule={payoffSchedule}
-                    strategy={strategy}
-                  />
-                )}
+          <div className="lg:col-span-2 h-full overflow-y-auto bg-background">
+            <div className="p-6 lg:p-10 max-w-5xl space-y-6">
+              {debts.length > 0 ? (
+                <>
+                  {/* Payoff Summary */}
+                  {payoffSchedule && (
+                    <PayoffSummary
+                      payoffSchedule={payoffSchedule}
+                      strategy={strategy}
+                    />
+                  )}
 
-                {/* Payoff Table */}
-                {payoffSchedule && (
-                  <PayoffSchedule
-                    payoffSchedule={payoffSchedule}
-                    debts={debts}
-                    strategy={strategy}
-                    showAllMonths={showAllMonths}
-                    onShowAllMonthsChange={setShowAllMonths}
-                  />
-                )}
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Ready to be debt-free?
-                </h3>
-                <p className="text-gray-500 max-w-md">
-                  Add your debts on the left to generate your personalized
-                  payoff plan.
-                </p>
-              </div>
-            )}
+                  {/* Payoff Table */}
+                  {payoffSchedule && (
+                    <PayoffSchedule
+                      payoffSchedule={payoffSchedule}
+                      debts={debts}
+                      strategy={strategy}
+                      showAllMonths={showAllMonths}
+                      onShowAllMonthsChange={setShowAllMonths}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Ready to be debt-free?
+                  </h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Add your debts on the left to generate your personalized
+                    payoff plan.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
