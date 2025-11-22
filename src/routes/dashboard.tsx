@@ -54,7 +54,19 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Abstract Background Hotspots */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Top Left - Indigo/Blue */}
+        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-500/20 blur-[120px]" />
+
+        {/* Top Right - Purple */}
+        <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] rounded-full bg-purple-600/10 blur-[100px]" />
+
+        {/* Center/Bottom - Subtle Blue */}
+        <div className="absolute top-[10%] left-[20%] w-[50%] h-[50%] rounded-full bg-blue-400/20 blur-[140px]" />
+      </div>
+
       {/* Navigation Bar */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-4">
@@ -68,7 +80,7 @@ function Dashboard() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         <div className="mb-6">
           <h2 className="text-3xl font-bold text-foreground mb-2">
             Your Workbooks

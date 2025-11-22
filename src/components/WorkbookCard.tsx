@@ -52,7 +52,7 @@ export function WorkbookCard({ workbook }: WorkbookCardProps) {
 
   return (
     <Link to="/w/$id" params={{ id: workbook.id }}>
-      <Card className="cursor-pointer hover:shadow-lg transition-shadow group">
+      <Card className="cursor-pointer hover:shadow-lg transition-shadow group bg-white">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
