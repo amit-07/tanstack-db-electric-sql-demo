@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { db } from '../server/db';
 import { workbookSchema } from '../universal/entities';
-import { authUser, getTxId } from './helpers';
+import { authUser, authWorkbook, getTxId } from './helpers';
 
 export const createWorkbook = createServerFn({ method: 'POST' })
   .inputValidator(
@@ -23,10 +23,10 @@ export const createWorkbook = createServerFn({ method: 'POST' })
 export const updateWorkbook = createServerFn({ method: 'POST' })
   .inputValidator(workbookSchema.pick({ id: true, name: true }))
   .handler(async ({ data }) => {
-    const user = await authUser();
+    await authWorkbook(data.id);
     const [workbook, [{ txid }]] = await db.$transaction([
       db.workbook.update({
-        where: { id: data.id, ownerId: user.id },
+        where: { id: data.id },
         data: { name: data.name },
       }),
       getTxId(),
