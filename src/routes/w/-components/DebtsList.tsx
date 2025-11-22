@@ -5,6 +5,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  cn,
+  formatNumber,
+  parseNumericInput,
+  toNumericValue,
+} from '@/lib/client/utils';
 import { DebtType } from '@/lib/universal/types';
 import Decimal from 'decimal.js';
 import {
@@ -64,47 +70,137 @@ const EditableCell = ({
   suffix,
   className = '',
 }: {
-  value: string | number;
+  value: string | number | Decimal;
   onSave: (val: string | number) => void;
   type?: 'text' | 'number';
   prefix?: string;
   suffix?: string;
   className?: string;
 }) => {
-  const [localValue, setLocalValue] = useState(value);
+  const [localValue, setLocalValue] = useState<string | number>(
+    toNumericValue(value),
+  );
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
-    setLocalValue(value);
+    setLocalValue(toNumericValue(value));
   }, [value]);
 
-  const handleBlur = () => {
-    if (localValue !== value) {
-      onSave(type === 'number' ? Number(localValue) : localValue);
+  const displayValue = isFocused
+    ? String(localValue ?? '')
+    : type === 'number'
+      ? formatNumber(localValue) || String(localValue ?? '')
+      : String(localValue ?? '');
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (type === 'number') {
+      const num = parseNumericInput(localValue);
+      setLocalValue(isNaN(num) ? localValue : num);
     }
   };
 
+  const handleBlur = () => {
+    setIsFocused(false);
+    const cleanValue =
+      type === 'number' ? parseNumericInput(localValue) : localValue;
+    const originalValue = toNumericValue(value);
+
+    if (cleanValue !== originalValue) {
+      onSave(type === 'number' ? Number(cleanValue) : cleanValue);
+    } else {
+      setLocalValue(originalValue);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue =
+      type === 'number'
+        ? e.target.value.replace(/[^\d.-]/g, '')
+        : e.target.value;
+    setLocalValue(newValue);
+  };
+
+  const isRightAligned = className.includes('justify-end');
+  const showBackground = type === 'number';
+
   return (
-    <div className={`flex items-center group ${className}`}>
-      {prefix && (
-        <span className="text-muted-foreground text-xs mr-1 select-none">
-          {prefix}
-        </span>
-      )}
-      <input
-        type={type}
-        value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={handleBlur}
-        className={`bg-transparent border-none p-0 h-auto focus:ring-0 w-full text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-[20px]`}
-      />
-      {suffix && (
-        <span className="text-muted-foreground text-xs ml-0.5 select-none">
-          {suffix}
-        </span>
-      )}
+    <div className={cn('flex items-center group', className)}>
+      <div
+        className={cn(
+          'flex items-center border border-transparent rounded px-1.5 py-0.5 hover:border-border/30 focus-within:border-border/60 transition-colors w-full',
+          showBackground && 'bg-muted/30 focus-within:bg-background',
+          isRightAligned && 'justify-end',
+        )}
+      >
+        {prefix && (
+          <span className="text-muted-foreground text-xs mr-1 select-none">
+            {prefix}
+          </span>
+        )}
+        <input
+          type="text"
+          value={displayValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          className={cn(
+            'bg-transparent border-none p-0 h-auto focus:ring-0 flex-1 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-[20px]',
+            isRightAligned && 'text-right',
+          )}
+        />
+        {suffix && (
+          <span className="text-muted-foreground text-xs ml-1.5 select-none">
+            {suffix}
+          </span>
+        )}
+      </div>
     </div>
   );
 };
+
+const DebtField = ({
+  label,
+  value,
+  onSave,
+  prefix,
+  suffix,
+}: {
+  label: string;
+  value: number;
+  onSave: (val: number) => void;
+  prefix?: string;
+  suffix?: string;
+}) => (
+  <div>
+    <EditableCell
+      value={value}
+      type="number"
+      prefix={prefix}
+      suffix={suffix}
+      onSave={(val) => onSave(val as number)}
+      className="text-sm text-foreground/80"
+    />
+    <div className="text-[10px] font-semibold text-muted-foreground mt-0.5 text-left pl-1.5">
+      {label}
+    </div>
+  </div>
+);
+
+const TotalDisplay = ({ label, amount }: { label: string; amount: number }) => (
+  <div className="text-right">
+    <span className="block font-bold text-foreground">
+      {amount.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      })}
+    </span>
+    <span className="block text-[10px] font-semibold text-muted-foreground mt-0.5">
+      {label}
+    </span>
+  </div>
+);
 
 export function DebtsList({
   debts,
@@ -113,17 +209,24 @@ export function DebtsList({
   onUpdateDebt,
   onDeleteDebt,
 }: DebtsListProps) {
-  const totalMinPayment = debts.reduce(
-    (sum, debt) => sum.add(debt.minPayment),
-    new Decimal(0),
-  );
   const totalBalance = debts.reduce(
     (sum, debt) => sum.add(debt.balance),
     new Decimal(0),
   );
+  const totalMinPayment = debts.reduce(
+    (sum, debt) => sum.add(debt.minPayment),
+    new Decimal(0),
+  );
+
+  const getDebtIcon = (debtType: string) => {
+    return (
+      debtTypeOptions.find((opt) => opt.value === debtType)?.icon || Wallet
+    );
+  };
 
   return (
     <div className="h-full flex flex-col bg-card rounded-2xl border border-border shadow-sm mb-1">
+      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30 rounded-t-2xl">
         <h2 className="text-lg font-semibold text-foreground">Debts</h2>
         {debts.length === 0 && (
@@ -139,166 +242,124 @@ export function DebtsList({
         )}
       </div>
 
+      {/* Debts List */}
       <div className="flex-1 overflow-y-auto p-0">
-        {debts.map((debt, index) => {
-          const currentType = debtTypeOptions.find(
-            (opt) => opt.value === debt.type,
-          );
-          const Icon = currentType?.icon || Wallet;
+        {debts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
+            <p className="text-sm">No debts added yet</p>
+          </div>
+        ) : (
+          debts.map((debt, index) => {
+            const Icon = getDebtIcon(debt.type);
+            const isLastDebt = index === debts.length - 1;
 
-          return (
-            <div
-              key={debt.id}
-              className={`group relative bg-card p-4 hover:bg-muted/30 transition-all ${
-                index !== debts.length - 1 ? 'border-b border-border' : ''
-              }`}
-            >
-              {/* Top Row: Icon, Name, Actions */}
-              <div className="flex items-center gap-3 mb-3">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
-                      title={currentType?.label}
+            return (
+              <div
+                key={debt.id}
+                className={cn(
+                  'group relative bg-card p-4 transition-all',
+                  !isLastDebt && 'border-b border-border',
+                )}
+              >
+                {/* Top Row: Icon, Name, Actions */}
+                <div className="flex items-center gap-3 mb-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
+                        title={
+                          debtTypeOptions.find((opt) => opt.value === debt.type)
+                            ?.label
+                        }
+                      >
+                        <Icon className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="rounded-xl border-border shadow-lg"
                     >
-                      <Icon className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="rounded-xl border-border shadow-lg"
-                  >
-                    {debtTypeOptions.map((option) => {
-                      const OptionIcon = option.icon;
-                      return (
+                      {debtTypeOptions.map((option) => (
                         <DropdownMenuItem
                           key={option.value}
                           onClick={() => onTypeChange(debt.id, option.value)}
                         >
-                          <OptionIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <option.icon className="h-4 w-4 mr-2 text-muted-foreground" />
                           {option.label}
                         </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-                <div className="flex-1 min-w-0">
-                  <EditableCell
-                    value={debt.name}
-                    onSave={(val) =>
-                      onUpdateDebt(debt.id, 'name', val as string)
-                    }
-                    className="text-base font-semibold text-foreground"
-                  />
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <EditableCell
+                      value={debt.name}
+                      onSave={(val) =>
+                        onUpdateDebt(debt.id, 'name', val as string)
+                      }
+                      className="text-base font-semibold text-foreground"
+                    />
+                  </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="rounded-xl border-border shadow-lg"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => onDeleteDebt(debt.id)}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="rounded-xl border-border shadow-lg"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Debt
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Bottom Row: Values */}
-              <div className="grid grid-cols-3 gap-4 pl-11">
-                <div>
-                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
-                    Balance
-                  </div>
-                  <EditableCell
-                    value={debt.balance.toNumber()}
-                    type="number"
-                    prefix="$"
-                    onSave={(val) =>
-                      onUpdateDebt(debt.id, 'balance', val as number)
-                    }
-                    className="text-sm text-foreground/80"
-                  />
+                      <DropdownMenuItem
+                        onClick={() => onDeleteDebt(debt.id)}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Debt
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <div>
-                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
-                    Rate
-                  </div>
-                  <EditableCell
+
+                {/* Bottom Row: Values */}
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-2 pl-11">
+                  <DebtField
+                    label="Rate"
                     value={debt.rate.toNumber()}
-                    type="number"
                     suffix="%"
-                    onSave={(val) =>
-                      onUpdateDebt(debt.id, 'rate', val as number)
-                    }
-                    className="text-sm text-foreground/80"
+                    onSave={(val) => onUpdateDebt(debt.id, 'rate', val)}
                   />
-                </div>
-                <div>
-                  <div className="text-[10px] font-semibold text-muted-foreground mb-0.5">
-                    Min Pay
-                  </div>
-                  <EditableCell
+                  <DebtField
+                    label="Min Pay"
                     value={debt.minPayment.toNumber()}
-                    type="number"
                     prefix="$"
-                    onSave={(val) =>
-                      onUpdateDebt(debt.id, 'minPayment', val as number)
-                    }
-                    className="text-sm text-foreground/80"
+                    onSave={(val) => onUpdateDebt(debt.id, 'minPayment', val)}
+                  />
+                  <DebtField
+                    label="Balance"
+                    value={debt.balance.toNumber()}
+                    prefix="$"
+                    onSave={(val) => onUpdateDebt(debt.id, 'balance', val)}
                   />
                 </div>
               </div>
-            </div>
-          );
-        })}
-
-        {debts.length === 0 && (
-          <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
-            <p className="text-sm">No debts added yet</p>
-          </div>
+            );
+          })
         )}
       </div>
 
+      {/* Totals Footer */}
       {debts.length > 0 && (
         <div className="bg-muted/20 border-t border-border p-4 rounded-b-2xl">
           <div className="flex justify-between items-center text-sm">
             <span className="font-medium text-muted-foreground">Total</span>
             <div className="flex gap-6">
-              <div className="text-right">
-                <span className="block text-[10px] font-semibold text-muted-foreground">
-                  Balance
-                </span>
-                <span className="font-bold text-foreground">
-                  {totalBalance.toNumber().toLocaleString('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="block text-[10px] font-semibold text-muted-foreground">
-                  Min Pay
-                </span>
-                <span className="font-bold text-foreground">
-                  {totalMinPayment.toNumber().toLocaleString('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
+              <TotalDisplay
+                label="Min Pay"
+                amount={totalMinPayment.toNumber()}
+              />
+              <TotalDisplay label="Balance" amount={totalBalance.toNumber()} />
             </div>
           </div>
         </div>

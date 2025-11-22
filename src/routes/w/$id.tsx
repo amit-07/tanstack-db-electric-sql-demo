@@ -117,8 +117,15 @@ function WorkbookDetail() {
     value: string | number,
   ) => {
     debtsCollection.update(debtId, (draft) => {
-      // @ts-ignore - dynamic assignment
-      draft[field] = value;
+      // Convert numeric values to strings for balance, rate, and minPayment
+      // as the schema expects strings
+      if (field === 'balance' || field === 'rate' || field === 'minPayment') {
+        // @ts-ignore - dynamic assignment
+        draft[field] = value.toString();
+      } else {
+        // @ts-ignore - dynamic assignment
+        draft[field] = value;
+      }
     });
   };
 

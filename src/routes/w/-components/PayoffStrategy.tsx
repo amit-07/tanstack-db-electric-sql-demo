@@ -4,6 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { formatNumber, parseNumericInput } from '@/lib/client/utils';
 import { PayoffStrategyType } from '@/lib/universal/types';
 import Decimal from 'decimal.js';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, Info } from 'lucide-react';
@@ -25,40 +26,46 @@ export function PayoffStrategy({
   totalMinPayment,
 }: PayoffStrategyProps) {
   // Local state to allow free typing without interference
-  const [localValue, setLocalValue] = useState(totalMonthlyPayment.toFixed(2));
+  const [localValue, setLocalValue] = useState(totalMonthlyPayment.toNumber());
   const [isFocused, setIsFocused] = useState(false);
 
   // Sync local value when prop changes (but not while user is typing)
   useEffect(() => {
     if (!isFocused) {
-      setLocalValue(totalMonthlyPayment.toFixed(2));
+      setLocalValue(totalMonthlyPayment.toNumber());
     }
   }, [totalMonthlyPayment, isFocused]);
 
+  // Display formatted value when not focused, raw value when focused
+  const displayValue = isFocused
+    ? String(localValue ?? '')
+    : formatNumber(localValue) || String(localValue ?? '');
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLocalValue(value);
+    const newValue = e.target.value.replace(/[^\d.-]/g, '');
+    setLocalValue(newValue as any);
     // Update parent immediately for real-time calculations
-    onTotalMonthlyPaymentChange(
-      value === '' ? new Decimal(0) : new Decimal(value),
-    );
+    const numValue = newValue === '' ? 0 : parseNumericInput(newValue);
+    onTotalMonthlyPaymentChange(new Decimal(numValue));
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    const num = parseNumericInput(localValue);
+    setLocalValue(isNaN(num) ? localValue : num);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
     // Ensure value is properly formatted on blur
-    const numValue = localValue === '' ? 0 : Number(localValue);
+    const numValue = parseNumericInput(localValue);
     if (isNaN(numValue) || numValue < 0) {
-      setLocalValue(totalMonthlyPayment.toFixed(2));
+      setLocalValue(totalMonthlyPayment.toNumber());
       onTotalMonthlyPaymentChange(totalMonthlyPayment);
     } else {
-      setLocalValue(new Decimal(numValue).toFixed(2));
+      setLocalValue(numValue);
       onTotalMonthlyPaymentChange(new Decimal(numValue));
     }
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
   };
 
   return (
@@ -78,10 +85,8 @@ export function PayoffStrategy({
             </div>
             <input
               id="monthly-payment"
-              type="number"
-              step="0.01"
-              min="0"
-              value={localValue}
+              type="text"
+              value={displayValue}
               onChange={handleChange}
               onFocus={handleFocus}
               onBlur={handleBlur}
@@ -90,7 +95,7 @@ export function PayoffStrategy({
           </div>
           <div className="flex items-center gap-2">
             <p className="text-[10px] text-muted-foreground font-medium">
-              Min: ${totalMinPayment.toFixed(0)}
+              Min: ${formatNumber(totalMinPayment)}
             </p>
             {totalMonthlyPayment.gt(0) &&
               totalMonthlyPayment.lt(totalMinPayment) && (
