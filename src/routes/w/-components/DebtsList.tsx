@@ -225,10 +225,10 @@ export function DebtsList({
   };
 
   return (
-    <div className="h-full flex flex-col bg-card rounded-2xl border border-border shadow-sm mb-1">
+    <div className="h-full flex flex-col bg-card rounded-2xl border border-border mb-1">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30 rounded-t-2xl">
-        <h2 className="text-lg font-semibold text-foreground">Debts</h2>
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="text-base font-semibold text-foreground">Debts</h2>
         {debts.length === 0 && (
           <Button
             onClick={onPopulateDemoDebts}
@@ -266,7 +266,7 @@ export function DebtsList({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
+                        className="h-8 w-8 rounded-lg bg-muted/30 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
                         title={
                           debtTypeOptions.find((opt) => opt.value === debt.type)
                             ?.label
@@ -297,13 +297,13 @@ export function DebtsList({
                       onSave={(val) =>
                         onUpdateDebt(debt.id, 'name', val as string)
                       }
-                      className="text-base font-semibold text-foreground"
+                      className="text-sm font-medium text-foreground"
                     />
                   </div>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
+                      <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100">
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
@@ -315,7 +315,7 @@ export function DebtsList({
                         onClick={() => onDeleteDebt(debt.id)}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="h-4 w-4 mr-2 text-destructive" />
                         Delete Debt
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -351,7 +351,7 @@ export function DebtsList({
 
       {/* Totals Footer */}
       {debts.length > 0 && (
-        <div className="bg-muted/20 border-t border-border p-4 rounded-b-2xl">
+        <div className="bg-card border-t border-border p-4 rounded-b-2xl">
           <div className="flex justify-between items-center text-sm">
             <span className="font-medium text-muted-foreground">Total</span>
             <div className="flex gap-6">

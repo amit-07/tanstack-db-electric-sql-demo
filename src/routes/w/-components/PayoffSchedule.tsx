@@ -44,26 +44,28 @@ export function PayoffSchedule({
   }, [debts, strategy]);
 
   return (
-    <div className="bg-card rounded-3xl overflow-hidden shadow-sm border border-border">
-      <div className="px-6 py-4 border-b border-border bg-muted/30">
-        <h3 className="text-lg font-bold text-foreground">Payoff Schedule</h3>
+    <div className="bg-card rounded-2xl overflow-hidden border border-border">
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="text-base font-semibold text-foreground">
+          Payoff Schedule
+        </h3>
       </div>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-muted/50">
+          <TableHeader>
             <TableRow className="hover:bg-transparent border-b-border">
-              <TableHead className="w-32 pl-6 py-3 text-xs font-semibold text-muted-foreground">
+              <TableHead className="w-32 pl-6 py-3 text-xs font-medium text-muted-foreground">
                 Month
               </TableHead>
               {orderedDebts.map((debt) => (
                 <TableHead
                   key={debt.id}
-                  className="text-center min-w-[120px] py-3 text-xs font-semibold text-muted-foreground"
+                  className="text-center min-w-[120px] py-3 text-xs font-medium text-muted-foreground"
                 >
                   {debt.name}
                 </TableHead>
               ))}
-              <TableHead className="text-center min-w-[120px] bg-muted/80 py-3 text-xs font-semibold text-muted-foreground">
+              <TableHead className="text-center min-w-[120px] bg-muted/30 py-3 text-xs font-bold text-muted-foreground">
                 Total
               </TableHead>
             </TableRow>
@@ -75,9 +77,9 @@ export function PayoffSchedule({
               return (
                 <TableRow
                   key={month.month}
-                  className={`hover:bg-muted/50 border-b-muted/50 ${isJanuary ? 'border-t-2 border-t-border' : ''}`}
+                  className={`hover:bg-muted/30 border-b-border ${isJanuary ? 'border-t-2 border-t-border' : ''}`}
                 >
-                  <TableCell className="font-semibold text-sm text-foreground/80 pl-6 py-3">
+                  <TableCell className="font-medium text-sm text-foreground/80 pl-6 py-3">
                     {monthDate.toPlainDate({ day: 1 }).toLocaleString('en-US', {
                       month: 'short',
                       year: 'numeric',

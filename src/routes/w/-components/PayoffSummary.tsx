@@ -15,14 +15,14 @@ export function PayoffSummary({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Debt Free Date */}
-      <Card className="border-0 shadow-sm bg-linear-to-br from-indigo-500 to-purple-600 text-white rounded-3xl overflow-hidden relative">
+      <Card className="border-0 bg-linear-to-br from-indigo-500 to-purple-600 text-white rounded-2xl overflow-hidden relative">
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black/10 rounded-full blur-xl"></div>
-        <CardContent className="px-6 py-3 relative z-10">
-          <div className="text-indigo-100 text-xs font-semibold mb-0.5">
+        <CardContent className="px-6 py-4 relative z-10">
+          <div className="text-indigo-100 text-sm font-medium mb-1">
             Debt Free By
           </div>
-          <div className="text-3xl font-bold">
+          <div className="text-3xl font-bold tracking-tight">
             {Temporal.PlainYearMonth.from(payoffSchedule.debtFreeDate)
               .toPlainDate({ day: 1 })
               .toLocaleString('en-US', {
@@ -30,38 +30,38 @@ export function PayoffSummary({
                 year: 'numeric',
               })}
           </div>
-          <div className="mt-0.5 text-indigo-200 text-sm font-medium">
+          <div className="mt-1 text-indigo-200 text-sm font-medium">
             Using {strategy} strategy
           </div>
         </CardContent>
       </Card>
 
       {/* Time to Payoff */}
-      <Card className="border-0 shadow-sm bg-card rounded-3xl overflow-hidden">
-        <CardContent className="px-6 py-3">
-          <div className="text-muted-foreground text-xs font-semibold mb-0.5">
+      <Card className="border border-border shadow-none bg-card rounded-2xl overflow-hidden">
+        <CardContent className="px-6 py-4">
+          <div className="text-muted-foreground text-sm font-medium mb-1">
             Time to Payoff
           </div>
-          <div className="text-3xl font-bold text-foreground">
+          <div className="text-3xl font-bold text-foreground tracking-tight">
             {payoffSchedule.monthsToPayoff}{' '}
             <span className="text-lg text-muted-foreground font-medium">
               {payoffSchedule.monthsToPayoff === 1 ? 'month' : 'months'}
             </span>
           </div>
-          <div className="mt-0.5 text-green-600 text-sm font-medium flex items-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+          <div className="mt-1 text-green-600 text-sm font-medium flex items-center">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
             On track
           </div>
         </CardContent>
       </Card>
 
       {/* Total Interest */}
-      <Card className="border-0 shadow-sm bg-card rounded-3xl overflow-hidden">
-        <CardContent className="px-6 py-3">
-          <div className="text-muted-foreground text-xs font-semibold mb-0.5">
+      <Card className="border border-border shadow-none bg-card rounded-2xl overflow-hidden">
+        <CardContent className="px-6 py-4">
+          <div className="text-muted-foreground text-sm font-medium mb-1">
             Total Interest
           </div>
-          <div className="text-3xl font-bold text-foreground">
+          <div className="text-3xl font-bold text-foreground tracking-tight">
             {payoffSchedule.totalInterestPaid
               .toNumber()
               .toLocaleString('en-US', {
@@ -70,7 +70,7 @@ export function PayoffSummary({
                 maximumFractionDigits: 0,
               })}
           </div>
-          <div className="mt-0.5 text-muted-foreground text-sm font-medium">
+          <div className="mt-1 text-muted-foreground text-sm font-medium">
             Estimated cost
           </div>
         </CardContent>
