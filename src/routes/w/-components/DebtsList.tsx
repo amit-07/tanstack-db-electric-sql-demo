@@ -202,6 +202,15 @@ const TotalDisplay = ({ label, amount }: { label: string; amount: number }) => (
   </div>
 );
 
+const RateDisplay = ({ label, rate }: { label: string; rate: number }) => (
+  <div className="text-right">
+    <span className="block font-bold text-foreground">{rate.toFixed(2)}%</span>
+    <span className="block text-[10px] font-semibold text-muted-foreground mt-0.5">
+      {label}
+    </span>
+  </div>
+);
+
 export function DebtsList({
   debts,
   onPopulateDemoDebts,
@@ -217,6 +226,15 @@ export function DebtsList({
     (sum, debt) => sum.add(debt.minPayment),
     new Decimal(0),
   );
+
+  // Calculate weighted average rate
+  const weightedRateSum = debts.reduce(
+    (sum, debt) => sum.add(debt.rate.mul(debt.balance)),
+    new Decimal(0),
+  );
+  const avgRate = totalBalance.greaterThan(0)
+    ? weightedRateSum.div(totalBalance).toNumber()
+    : 0;
 
   const getDebtIcon = (debtType: string) => {
     return (
@@ -355,6 +373,7 @@ export function DebtsList({
           <div className="flex justify-between items-center text-sm">
             <span className="font-medium text-muted-foreground">Total</span>
             <div className="flex gap-6">
+              <RateDisplay label="Avg Rate" rate={avgRate} />
               <TotalDisplay
                 label="Min Pay"
                 amount={totalMinPayment.toNumber()}
