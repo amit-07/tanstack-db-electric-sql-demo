@@ -119,7 +119,7 @@ export function PayoffStrategy({
                 className="w-full pl-6 pr-3 py-2 bg-muted/30 border-0 rounded-lg text-base font-semibold text-foreground focus:ring-2 focus:ring-primary/10 focus:bg-muted/50 transition-all outline-none placeholder:text-muted-foreground/50"
               />
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
@@ -127,17 +127,17 @@ export function PayoffStrategy({
                 disabled={
                   parseNumericInput(localValue) <= totalMinPayment.toNumber()
                 }
-                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
               >
-                <MinusCircle className="h-6 w-6" />
+                <MinusCircle className="h-5 w-5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => handleAdjustment(50)}
-                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
               >
-                <PlusCircle className="h-6 w-6" />
+                <PlusCircle className="h-5 w-5" />
               </Button>
             </div>
           </div>

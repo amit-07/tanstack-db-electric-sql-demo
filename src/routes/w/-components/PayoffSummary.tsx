@@ -136,14 +136,14 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
       {/* Payoff Graph */}
       <Card className="border border-border shadow-none bg-card rounded-2xl overflow-hidden flex flex-col">
         <CardContent className="px-6 pt-3 pb-0 flex-1 min-h-[60px] flex flex-col">
-          <div className="text-muted-foreground text-sm font-medium mb-2">
+          <div className="text-muted-foreground text-sm font-medium">
             Payoff Timeline
           </div>
           <div className="flex-1 -ml-4 min-h-[60px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data}
-                margin={{ top: 0, right: 20, left: 20, bottom: 10 }}
+                margin={{ top: 15, right: 20, left: 20, bottom: 10 }}
               >
                 <defs>
                   <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">

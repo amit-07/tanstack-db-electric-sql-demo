@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/client/utils';
 import { PayoffScheduleResult } from '@/lib/universal/payoff';
 import { Temporal } from '@js-temporal/polyfill';
 import { useMemo } from 'react';
@@ -76,7 +77,10 @@ export function PayoffSchedule({
               return (
                 <TableRow
                   key={month.month}
-                  className={`hover:bg-muted/30 border-b-border ${isJanuary ? 'border-t-2 border-t-border' : ''}`}
+                  className={cn(
+                    'hover:bg-muted/30 border-b-border',
+                    isJanuary && 'border-t-2 border-t-foreground/40',
+                  )}
                 >
                   <TableCell className="font-medium text-sm text-foreground/80 pl-6 py-3">
                     {monthDate.toPlainDate({ day: 1 }).toLocaleString('en-US', {
@@ -117,11 +121,12 @@ export function PayoffSchedule({
                       <TableCell key={debt.id} className="text-center py-3">
                         <div className="flex flex-col items-center gap-0.5">
                           <div
-                            className={`text-[10px] font-medium px-1.5 py-px rounded-full ${
+                            className={cn(
+                              'text-[10px] font-medium px-1.5 py-px rounded-full',
                               payment.isMinimum
                                 ? 'bg-muted text-muted-foreground'
-                                : 'bg-green-50 text-green-700'
-                            }`}
+                                : 'bg-green-50 text-green-700',
+                            )}
                           >
                             {payment.isMinimum
                               ? 'Min'

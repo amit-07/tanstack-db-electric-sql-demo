@@ -275,7 +275,7 @@ export function DebtsList({
   return (
     <div className="h-full flex flex-col bg-card rounded-2xl border border-border mb-1">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <h2 className="text-base font-semibold text-foreground">Debts</h2>
         <div className="flex gap-2">
           {debts.length === 0 && (
@@ -329,12 +329,12 @@ export function DebtsList({
                     transition={{ duration: 0.2 }}
                     dragListener={false} // Disable manual drag sorting
                     className={cn(
-                      'group relative bg-card p-4 transition-shadow',
+                      'group relative bg-card py-2 px-4 transition-shadow',
                       !isLastDebt && 'border-b border-border',
                     )}
                   >
                     {/* Top Row: Icon, Name, Actions */}
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-1">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
