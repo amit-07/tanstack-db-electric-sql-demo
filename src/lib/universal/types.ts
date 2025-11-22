@@ -6,3 +6,8 @@ export enum DebtType {
   Personal = 'personal',
   Other = 'other',
 }
+
+export enum PayoffStrategyType {
+  Avalanche = 'avalanche',
+  Snowball = 'snowball',
+}
