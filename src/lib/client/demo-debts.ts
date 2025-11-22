@@ -44,6 +44,7 @@ export const demoDebtsTemplate = [
 ];
 
 export function populateDemoDebts(workbookId: string) {
+  const now = new Date().toISOString();
   demoDebtsTemplate.forEach((debt) => {
     debtsCollection.insert({
       id: uuidv7(),
@@ -53,6 +54,8 @@ export function populateDemoDebts(workbookId: string) {
       rate: debt.rate.toString(),
       minPayment: debt.minPayment.toString(),
       balance: debt.balance.toString(),
+      createdAt: now,
+      updatedAt: now,
     });
   });
 }

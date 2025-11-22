@@ -7,6 +7,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import Decimal from 'decimal.js';
 import { useEffect, useMemo, useState } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 import { DebtsList } from './-components/DebtsList';
 import { PayoffSchedule } from './-components/PayoffSchedule';
 import { PayoffStrategy } from './-components/PayoffStrategy';
@@ -57,6 +58,7 @@ function WorkbookDetail() {
   const [totalMonthlyPayment, setTotalMonthlyPayment] = useState<Decimal>(
     new Decimal(0),
   );
+  const [newDebtId, setNewDebtId] = useState<string | null>(null);
 
   // Update totalMonthlyPayment when totalMinPayment changes
   const totalMinPayment = debts.reduce(
@@ -112,6 +114,23 @@ function WorkbookDetail() {
     populateDemoDebts(workbookId);
   };
 
+  const handleAddDebt = () => {
+    const id = uuidv7();
+    setNewDebtId(id);
+    const now = new Date().toISOString();
+    debtsCollection.insert({
+      id,
+      workbookId,
+      name: 'New Debt',
+      type: DebtType.Credit,
+      rate: '0',
+      minPayment: '0',
+      balance: '0',
+      createdAt: now,
+      updatedAt: now,
+    });
+  };
+
   const handleTypeChange = (debtId: string, newType: DebtType) => {
     debtsCollection.update(debtId, (draft) => {
       draft.type = newType;
@@ -160,12 +179,15 @@ function WorkbookDetail() {
       <main className="flex-1 w-full mx-auto overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
           {/* Left Column: Data Entry */}
-          <div className="lg:col-span-1 h-full flex flex-col min-h-0 bg-muted/30">
+          <div className="lg:col-span-1 h-full flex flex-col min-h-0 bg-gray-100">
             <div className="flex-1 overflow-hidden min-h-0 pt-4 px-4 lg:pt-6 lg:px-6 pb-0.5">
               <div className="max-w-xl ml-auto mr-auto lg:mr-0 h-full">
                 <DebtsList
                   debts={debts}
+                  newDebtId={newDebtId}
+                  onNewDebtFocused={() => setNewDebtId(null)}
                   onPopulateDemoDebts={handlePopulateDemoDebts}
+                  onAddDebt={handleAddDebt}
                   onTypeChange={handleTypeChange}
                   onUpdateDebt={handleUpdateDebt}
                   onDeleteDebt={handleDeleteDebt}
@@ -194,9 +216,7 @@ function WorkbookDetail() {
                 <>
                   {/* Payoff Summary */}
                   {payoffSchedule && (
-                    <PayoffSummary
-                      payoffSchedule={payoffSchedule}
-                    />
+                    <PayoffSummary payoffSchedule={payoffSchedule} />
                   )}
 
                   {/* Payoff Table */}

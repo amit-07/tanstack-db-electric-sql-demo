@@ -1,3 +1,4 @@
+import { sortBy } from 'es-toolkit';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/client/utils';
 import { DebtType } from '@/lib/universal/types';
 import Decimal from 'decimal.js';
+import { AnimatePresence, Reorder } from 'framer-motion';
 import {
   Car,
   CreditCard,
@@ -20,6 +22,7 @@ import {
   Home,
   MoreHorizontal,
   Plus,
+  Sparkles,
   Trash2,
   User,
   Wallet,
@@ -52,7 +55,10 @@ const debtTypeOptions: DebtTypeOption[] = [
 
 interface DebtsListProps {
   debts: WorkbookDebt[];
+  newDebtId?: string | null;
+  onNewDebtFocused?: () => void;
   onPopulateDemoDebts: () => void;
+  onAddDebt: () => void;
   onTypeChange: (debtId: string, newType: DebtType) => void;
   onUpdateDebt: (
     debtId: string,
@@ -69,6 +75,8 @@ const EditableCell = ({
   prefix,
   suffix,
   className = '',
+  shouldFocus,
+  onFocus,
 }: {
   value: string | number | Decimal;
   onSave: (val: string | number) => void;
@@ -76,11 +84,21 @@ const EditableCell = ({
   prefix?: string;
   suffix?: string;
   className?: string;
+  shouldFocus?: boolean;
+  onFocus?: () => void;
 }) => {
   const [localValue, setLocalValue] = useState<string | number>(
     toNumericValue(value),
   );
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (shouldFocus && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [shouldFocus]);
 
   useEffect(() => {
     setLocalValue(toNumericValue(value));
@@ -94,6 +112,9 @@ const EditableCell = ({
 
   const handleFocus = () => {
     setIsFocused(true);
+    if (onFocus) {
+      onFocus();
+    }
     if (type === 'number') {
       const num = parseNumericInput(localValue);
       setLocalValue(isNaN(num) ? localValue : num);
@@ -139,6 +160,7 @@ const EditableCell = ({
           </span>
         )}
         <input
+          ref={inputRef}
           type="text"
           value={displayValue}
           onChange={handleChange}
@@ -213,11 +235,19 @@ const RateDisplay = ({ label, rate }: { label: string; rate: number }) => (
 
 export function DebtsList({
   debts,
+  newDebtId,
+  onNewDebtFocused,
   onPopulateDemoDebts,
+  onAddDebt,
   onTypeChange,
   onUpdateDebt,
   onDeleteDebt,
 }: DebtsListProps) {
+  const sortedDebts = sortBy(debts, [
+    (debt) => debt.balance.toNumber() * -1,
+    'name',
+  ]);
+
   const totalBalance = debts.reduce(
     (sum, debt) => sum.add(debt.balance),
     new Decimal(0),
@@ -247,123 +277,158 @@ export function DebtsList({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-base font-semibold text-foreground">Debts</h2>
-        {debts.length === 0 && (
+        <div className="flex gap-2">
+          {debts.length === 0 && (
+            <Button
+              onClick={onPopulateDemoDebts}
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+              Populate Demo
+            </Button>
+          )}
           <Button
-            onClick={onPopulateDemoDebts}
-            variant="outline"
+            onClick={onAddDebt}
+            variant="ghost"
             size="sm"
             className="h-8 text-xs"
           >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Add Demo Data
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Add Debt
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Debts List */}
-      <div className="flex-1 overflow-y-auto p-0">
+      <div className="flex-1 overflow-y-auto p-0 relative">
         {debts.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
             <p className="text-sm">No debts added yet</p>
           </div>
         ) : (
-          debts.map((debt, index) => {
-            const Icon = getDebtIcon(debt.type);
-            const isLastDebt = index === debts.length - 1;
+          <Reorder.Group
+            axis="y"
+            values={debts}
+            onReorder={() => {}} // Read-only reordering for now since order is determined by balance
+            className="flex flex-col"
+          >
+            <AnimatePresence initial={false} mode="popLayout">
+              {sortedDebts.map((debt, index) => {
+                const Icon = getDebtIcon(debt.type);
+                const isLastDebt = index === sortedDebts.length - 1;
 
-            return (
-              <div
-                key={debt.id}
-                className={cn(
-                  'group relative bg-card p-4 transition-all',
-                  !isLastDebt && 'border-b border-border',
-                )}
-              >
-                {/* Top Row: Icon, Name, Actions */}
-                <div className="flex items-center gap-3 mb-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="h-8 w-8 rounded-lg bg-muted/30 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
-                        title={
-                          debtTypeOptions.find((opt) => opt.value === debt.type)
-                            ?.label
-                        }
-                      >
-                        <Icon className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      className="rounded-xl border-border shadow-lg"
-                    >
-                      {debtTypeOptions.map((option) => (
-                        <DropdownMenuItem
-                          key={option.value}
-                          onClick={() => onTypeChange(debt.id, option.value)}
+                return (
+                  <Reorder.Item
+                    key={debt.id}
+                    value={debt}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    dragListener={false} // Disable manual drag sorting
+                    className={cn(
+                      'group relative bg-card p-4 transition-shadow',
+                      !isLastDebt && 'border-b border-border',
+                    )}
+                  >
+                    {/* Top Row: Icon, Name, Actions */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="h-8 w-8 rounded-lg bg-muted/30 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
+                            title={
+                              debtTypeOptions.find(
+                                (opt) => opt.value === debt.type,
+                              )?.label
+                            }
+                          >
+                            <Icon className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="start"
+                          className="rounded-xl border-border shadow-lg"
                         >
-                          <option.icon className="h-4 w-4 mr-2 text-muted-foreground" />
-                          {option.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          {debtTypeOptions.map((option) => (
+                            <DropdownMenuItem
+                              key={option.value}
+                              onClick={() =>
+                                onTypeChange(debt.id, option.value)
+                              }
+                            >
+                              <option.icon className="h-4 w-4 mr-2 text-muted-foreground" />
+                              {option.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                  <div className="flex-1 min-w-0">
-                    <EditableCell
-                      value={debt.name}
-                      onSave={(val) =>
-                        onUpdateDebt(debt.id, 'name', val as string)
-                      }
-                      className="text-sm font-medium text-foreground"
-                    />
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <EditableCell
+                          value={debt.name}
+                          shouldFocus={debt.id === newDebtId}
+                          onFocus={
+                            debt.id === newDebtId ? onNewDebtFocused : undefined
+                          }
+                          onSave={(val) =>
+                            onUpdateDebt(debt.id, 'name', val as string)
+                          }
+                          className="text-sm font-medium text-foreground"
+                        />
+                      </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="rounded-xl border-border shadow-lg"
-                    >
-                      <DropdownMenuItem
-                        onClick={() => onDeleteDebt(debt.id)}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2 text-destructive" />
-                        Delete Debt
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 opacity-0 group-hover:opacity-100 focus:opacity-100 data-[state=open]:opacity-100">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="rounded-xl border-border shadow-lg"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => onDeleteDebt(debt.id)}
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+                            Delete Debt
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
 
-                {/* Bottom Row: Values */}
-                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-2 pl-11">
-                  <DebtField
-                    label="Rate"
-                    value={debt.rate.toNumber()}
-                    suffix="%"
-                    onSave={(val) => onUpdateDebt(debt.id, 'rate', val)}
-                  />
-                  <DebtField
-                    label="Min Pay"
-                    value={debt.minPayment.toNumber()}
-                    prefix="$"
-                    onSave={(val) => onUpdateDebt(debt.id, 'minPayment', val)}
-                  />
-                  <DebtField
-                    label="Balance"
-                    value={debt.balance.toNumber()}
-                    prefix="$"
-                    onSave={(val) => onUpdateDebt(debt.id, 'balance', val)}
-                  />
-                </div>
-              </div>
-            );
-          })
+                    {/* Bottom Row: Values */}
+                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-2 pl-11">
+                      <DebtField
+                        label="Rate"
+                        value={debt.rate.toNumber()}
+                        suffix="%"
+                        onSave={(val) => onUpdateDebt(debt.id, 'rate', val)}
+                      />
+                      <DebtField
+                        label="Min Payment"
+                        value={debt.minPayment.toNumber()}
+                        prefix="$"
+                        onSave={(val) =>
+                          onUpdateDebt(debt.id, 'minPayment', val)
+                        }
+                      />
+                      <DebtField
+                        label="Balance"
+                        value={debt.balance.toNumber()}
+                        prefix="$"
+                        onSave={(val) => onUpdateDebt(debt.id, 'balance', val)}
+                      />
+                    </div>
+                  </Reorder.Item>
+                );
+              })}
+            </AnimatePresence>
+          </Reorder.Group>
         )}
       </div>
 
@@ -375,7 +440,7 @@ export function DebtsList({
             <div className="flex gap-6">
               <RateDisplay label="Avg Rate" rate={avgRate} />
               <TotalDisplay
-                label="Min Pay"
+                label="Min Payment"
                 amount={totalMinPayment.toNumber()}
               />
               <TotalDisplay label="Balance" amount={totalBalance.toNumber()} />
