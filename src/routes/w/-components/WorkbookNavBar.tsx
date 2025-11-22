@@ -68,7 +68,7 @@ export function WorkbookNavBar({ user, workbook }: WorkbookNavBarProps) {
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigate({ to: '/dashboard' })}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+              className="flex items-center justify-center p-1 -mr-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,6 @@ export function WorkbookNavBar({ user, workbook }: WorkbookNavBarProps) {
               >
                 <path d="m15 18-6-6 6-6" />
               </svg>
-              Dash
             </button>
             <div className="h-6 w-px bg-border"></div>
             <div
