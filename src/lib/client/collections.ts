@@ -1,8 +1,8 @@
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/react-db';
-import { workbookSchema, debtSchema } from '../universal/entities';
+import { createDebt, deleteDebt, updateDebt } from '../functions/debts';
 import { createWorkbook, updateWorkbook } from '../functions/workbooks';
-import { createDebt, updateDebt, deleteDebt } from '../functions/debts';
+import { debtSchema, workbookSchema } from '../universal/entities';
 
 // Construct absolute URL for Electric sync
 // In browser: uses window.location.origin

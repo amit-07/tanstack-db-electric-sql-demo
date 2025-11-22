@@ -1,5 +1,6 @@
 import { auth } from '@/lib/server/auth';
 import { db } from '@/lib/server/db';
+import { json } from '@/lib/server/json';
 import { createFileRoute } from '@tanstack/react-router';
 
 // Proxy-auth pattern based on ElectricSQL example
@@ -13,10 +14,7 @@ export const Route = createFileRoute('/api/electric')({
         const session = await auth.api.getSession({ headers: request.headers });
 
         if (!session?.user?.id) {
-          return new Response(JSON.stringify({ error: 'Not authenticated' }), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' },
-          });
+          return json({ error: 'Not authenticated' }, 401);
         }
 
         const userId = session.user.id;
@@ -27,13 +25,7 @@ export const Route = createFileRoute('/api/electric')({
         const allowedTables = ['workbooks', 'debts'];
 
         if (!table || !allowedTables.includes(table)) {
-          return new Response(
-            JSON.stringify({ error: 'Invalid or missing table.' }),
-            {
-              status: 400,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          );
+          return json({ error: 'Invalid or missing table.' }, 400);
         }
 
         // Build WHERE SQL to filter by user access
@@ -41,19 +33,19 @@ export const Route = createFileRoute('/api/electric')({
 
         switch (table) {
           case 'debts':
-            // Filter debts by workbooks owned by the user
-            // First, fetch user's workbook IDs
+            // Get all workbooks owned by this user
             const userWorkbooks = await db.workbook.findMany({
               select: { id: true },
               where: { ownerId: userId },
             });
 
+            // If user has no workbooks, return empty result set
             if (userWorkbooks.length === 0) {
-              // User has no workbooks, return empty result
-              whereSql = '1 = 0';
+              whereSql = `1 = 0`;
             } else {
+              // Build IN clause with all workbook IDs
               const workbookIds = userWorkbooks
-                .map((w) => `'${w.id}'`)
+                .map((wb) => `'${wb.id}'`)
                 .join(', ');
               whereSql = `"workbookId" IN (${workbookIds})`;
             }
@@ -111,13 +103,7 @@ export const Route = createFileRoute('/api/electric')({
           });
         } catch (error) {
           console.error('Electric proxy error:', error);
-          return new Response(
-            JSON.stringify({ error: 'Failed to connect to Electric server' }),
-            {
-              status: 502,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          );
+          return json({ error: 'Failed to connect to Electric server' }, 502);
         }
       },
     },
