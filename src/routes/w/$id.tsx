@@ -196,7 +196,6 @@ function WorkbookDetail() {
                   {payoffSchedule && (
                     <PayoffSummary
                       payoffSchedule={payoffSchedule}
-                      strategy={strategy}
                     />
                   )}
 
