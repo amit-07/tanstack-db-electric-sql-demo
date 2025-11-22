@@ -1,10 +1,10 @@
-import { betterAuth } from 'better-auth'
-import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { reactStartCookies } from 'better-auth/react-start'
-import { db } from './db'
+import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { tanstackStartCookies } from 'better-auth/tanstack-start';
+import { db } from './db';
 
 export const auth = betterAuth({
-  plugins: [reactStartCookies()],
+  plugins: [tanstackStartCookies()],
   database: prismaAdapter(db, {
     provider: 'postgresql',
   }),
@@ -22,4 +22,4 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET as string,
   baseURL: process.env.BETTER_AUTH_URL as string,
-})
+});
