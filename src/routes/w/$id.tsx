@@ -25,12 +25,7 @@ import {
 } from '@/components/ui/table';
 import { authClient, useSession } from '@/lib/client/auth-client';
 import { debtsCollection } from '@/lib/client/collections';
-import {
-  AvalancheOptimizer,
-  Debt as PayoffDebt,
-  Schedule,
-  SnowballOptimizer,
-} from '@/lib/universal/payoff';
+import { PayoffCalculator, Debt } from '@/lib/universal/payoff';
 import { DebtType, PayoffStrategyType } from '@/lib/universal/types';
 import { Temporal } from '@js-temporal/polyfill';
 import { eq, useLiveQuery } from '@tanstack/react-db';
@@ -174,7 +169,7 @@ function WorkbookDetail() {
       const isFixedPayment =
         d.type === DebtType.Auto || d.type === DebtType.Home;
 
-      return new PayoffDebt({
+      return new Debt({
         id: d.id,
         name: d.name,
         startBalance: d.balance,
@@ -183,15 +178,9 @@ function WorkbookDetail() {
       });
     });
 
-    // Create optimizer based on strategy
-    const optimizer =
-      strategy === PayoffStrategyType.Avalanche
-        ? new AvalancheOptimizer(payoffDebts, payment)
-        : new SnowballOptimizer(payoffDebts, payment);
-
-    // Generate schedule
-    const schedule = new Schedule(payoffDebts, optimizer);
-    return schedule.toPayoffSchedule(strategy);
+    // Generate payoff schedule
+    const calculator = new PayoffCalculator(payoffDebts, payment, strategy);
+    return calculator.calculate();
   }, [debts, totalMonthlyPayment, strategy, totalMinPayment]);
 
   // Determine visible months for payoff table

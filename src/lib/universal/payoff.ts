@@ -1,265 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill';
 import Decimal from 'decimal.js';
-
-// TODO: Add support for custom total monthly payment (distribute extra payment across debts)
-// TODO: Add Snowball optimizer (lowest balance first strategy)
-// TODO: Add support for fixed minimum payments (auto/home loans) instead of just percentage-based
-// TODO: Add debt name property for display purposes
-// TODO: Implement the optimize() method in AvalancheOptimizer to distribute extra payments
-// TODO: Add method to export schedule in format expected by UI (with debtFreeDate, monthsToPayoff, totalInterestPaid, months array)
-// TODO: Add support for custom start date (currently uses Temporal.Now)
+import { PayoffStrategyType } from './types';
 
 const MIN_PAYMENT_THRESHOLD = 35;
-
-export class Debt {
-  public readonly id: string;
-  public readonly name: string;
-  public readonly startBalance: Decimal;
-  public readonly rate: Decimal; // 1% = 0.01
-  public readonly fixedMinPayment?: Decimal; // For installment loans (auto, home)
-
-  constructor(attrs: {
-    id: string;
-    name: string;
-    startBalance: Decimal;
-    rate: Decimal;
-    fixedMinPayment?: Decimal;
-  }) {
-    this.id = attrs.id;
-    this.name = attrs.name;
-    this.startBalance = attrs.startBalance;
-    this.rate = attrs.rate;
-    this.fixedMinPayment = attrs.fixedMinPayment;
-  }
-
-  // Use the greater of:
-  // 1.	$35 (or the full balance if under $35), OR
-  // 2.	1% of the statement balance + monthly interest + fees
-  // OR fixed payment if specified (for installment loans)
-  public calcMinPayment(balance: Decimal, interest: Decimal) {
-    if (balance.lte(0)) return new Decimal(0);
-
-    // For installment loans with fixed payments
-    if (this.fixedMinPayment) {
-      return Decimal.min(balance.plus(interest), this.fixedMinPayment);
-    }
-
-    // For revolving credit
-    return Decimal.max(
-      Decimal.min(balance, MIN_PAYMENT_THRESHOLD),
-      balance.mul(0.01).plus(interest),
-    );
-  }
-}
-
-class PaymentCell {
-  public readonly startBalance: Decimal;
-  public readonly interest: Decimal;
-  public readonly minPayment: Decimal;
-
-  private _payment: Decimal;
-
-  constructor(
-    public debt: Debt,
-    priorPeriod?: PaymentCell,
-  ) {
-    this.startBalance = priorPeriod?.endBalance || debt.startBalance;
-
-    this.interest = this.startBalance.mul(debt.rate.div(12));
-    this.minPayment = debt.calcMinPayment(this.startBalance, this.interest);
-    this._payment = this.minPayment;
-    if (this._payment.gte(this.startBalance)) this.interest = Decimal(0);
-  }
-
-  get payment() {
-    return this._payment;
-  }
-
-  set payment(value: Decimal) {
-    this._payment = Decimal.min(value, this.startBalance.plus(this.interest));
-  }
-
-  get endBalance(): Decimal {
-    return Decimal.max(
-      new Decimal(0),
-      this.startBalance.plus(this.interest).minus(this._payment),
-    );
-  }
-
-  isFinalPayment() {
-    return this._payment.gt(0) && this.endBalance.eq(0);
-  }
-
-  isMinPayment() {
-    return (
-      this._payment.gt(0) &&
-      this._payment.eq(this.minPayment) &&
-      !this.endBalance.eq(0)
-    );
-  }
-
-  get principal(): Decimal {
-    return this._payment.minus(this.interest);
-  }
-}
-
-class Period {
-  public readonly cells: PaymentCell[];
-
-  constructor(
-    public month: Temporal.PlainYearMonth,
-    cells: PaymentCell[],
-  ) {
-    this.cells = cells;
-  }
-
-  static initialize(
-    debts: Debt[],
-    startDate?: Temporal.PlainYearMonth,
-  ): Period {
-    const cells = debts.map((debt) => new PaymentCell(debt));
-    const date = startDate || Temporal.Now.plainDateISO().toPlainYearMonth();
-    return new Period(date, cells);
-  }
-
-  public nextPeriod(): Period {
-    const cells = this.cells.map((cell) => new PaymentCell(cell.debt, cell));
-    return new Period(this.month.add({ months: 1 }), cells);
-  }
-
-  public remainingBalance(): Decimal {
-    return Decimal.sum(...this.cells.map((cell) => cell.endBalance));
-  }
-
-  public totalMinPayment(): Decimal {
-    return Decimal.sum(...this.cells.map((cell) => cell.minPayment));
-  }
-
-  public totalPayment(): Decimal {
-    return Decimal.sum(...this.cells.map((cell) => cell.payment));
-  }
-
-  public totalInterest(): Decimal {
-    return Decimal.sum(...this.cells.map((cell) => cell.interest));
-  }
-}
-
-abstract class Optimizer {
-  constructor(
-    protected debts: Debt[],
-    protected totalMonthlyPayment: Decimal,
-  ) {}
-
-  abstract optimize(period: Period): void;
-
-  protected distributeExtraPayment(
-    period: Period,
-    orderedCells: PaymentCell[],
-  ) {
-    // Calculate how much extra payment we have available
-    let extraPayment = this.totalMonthlyPayment.minus(period.totalMinPayment());
-
-    // Distribute extra payment to debts in priority order
-    for (const cell of orderedCells) {
-      if (extraPayment.lte(0)) break;
-      if (cell.endBalance.lte(0)) continue;
-
-      const maxAdditional = cell.endBalance.minus(
-        cell.minPayment.minus(cell.interest),
-      );
-      const additionalPayment = Decimal.min(extraPayment, maxAdditional);
-
-      cell.payment = cell.minPayment.plus(additionalPayment);
-      extraPayment = extraPayment.minus(additionalPayment);
-    }
-  }
-}
-
-export class AvalancheOptimizer extends Optimizer {
-  constructor(debts: Debt[], totalMonthlyPayment: Decimal) {
-    super(debts, totalMonthlyPayment);
-  }
-
-  optimize(period: Period): void {
-    // Sort cells by rate (highest first)
-    const orderedCells = [...period.cells]
-      .filter((cell) => cell.startBalance.gt(0))
-      .sort((a, b) => b.debt.rate.cmp(a.debt.rate));
-
-    this.distributeExtraPayment(period, orderedCells);
-  }
-}
-
-export class SnowballOptimizer extends Optimizer {
-  constructor(debts: Debt[], totalMonthlyPayment: Decimal) {
-    super(debts, totalMonthlyPayment);
-  }
-
-  optimize(period: Period): void {
-    // Sort cells by balance (lowest first)
-    const orderedCells = [...period.cells]
-      .filter((cell) => cell.startBalance.gt(0))
-      .sort((a, b) => a.startBalance.cmp(b.startBalance));
-
-    this.distributeExtraPayment(period, orderedCells);
-  }
-}
-
 const MAX_MONTHS = 360;
-
-export class Schedule {
-  public readonly periods: Period[];
-
-  constructor(
-    public debts: Debt[],
-    optimizer: Optimizer,
-    startDate?: Temporal.PlainYearMonth,
-  ) {
-    this.periods = [Period.initialize(debts, startDate)];
-    for (let i = 0; i < MAX_MONTHS - 1; i++) {
-      const lastPeriod = this.periods.at(-1)!;
-      if (lastPeriod.remainingBalance().eq(0)) break;
-
-      const nextPeriod = lastPeriod.nextPeriod();
-      optimizer.optimize(nextPeriod);
-      this.periods.push(nextPeriod);
-    }
-  }
-
-  public toPayoffSchedule(strategyType: string): PayoffScheduleResult {
-    const debtFreeDate = this.periods.at(-1)!.month.toString();
-    const monthsToPayoff = this.periods.length;
-
-    const totalInterestPaid = Decimal.sum(
-      ...this.periods.map((p) => p.totalInterest()),
-    );
-
-    const months = this.periods.map((period, index) => ({
-      month: index,
-      date: period.month.toString(),
-      payments: period.cells.map((cell) => ({
-        debtId: cell.debt.id,
-        payment: cell.payment,
-        interest: cell.interest,
-        principal: cell.principal,
-        newBalance: cell.endBalance,
-        isMinimum: cell.isMinPayment(),
-      })),
-      totalPayment: period.totalPayment(),
-      totalInterest: period.totalInterest(),
-      remainingBalance: period.remainingBalance(),
-    }));
-
-    return {
-      strategy: strategyType,
-      totalMonthlyPayment: this.periods[0].totalPayment(),
-      months,
-      totalInterestPaid,
-      debtFreeDate,
-      monthsToPayoff,
-    };
-  }
-}
 
 // Export types for UI
 export interface MonthlyPayment {
@@ -281,10 +25,242 @@ export interface MonthlySchedule {
 }
 
 export interface PayoffScheduleResult {
-  strategy: string;
+  strategy: PayoffStrategyType;
   totalMonthlyPayment: Decimal;
   months: MonthlySchedule[];
   totalInterestPaid: Decimal;
   debtFreeDate: string;
   monthsToPayoff: number;
+}
+
+export interface DebtProps {
+  id: string;
+  name: string;
+  startBalance: Decimal;
+  rate: Decimal; // 1% = 0.01
+  fixedMinPayment?: Decimal; // For installment loans (auto, home)
+}
+
+export class Debt {
+  public readonly id: string;
+  public readonly name: string;
+  public readonly startBalance: Decimal;
+  public readonly rate: Decimal;
+  public readonly fixedMinPayment?: Decimal;
+
+  constructor(props: DebtProps) {
+    this.id = props.id;
+    this.name = props.name;
+    this.startBalance = props.startBalance;
+    this.rate = props.rate;
+    this.fixedMinPayment = props.fixedMinPayment;
+  }
+
+  // Calculate minimum payment based on debt type
+  // For installment loans: Fixed payment
+  // For revolving credit: Greater of $35 or 1% of balance + interest
+  public getMinPayment(balance: Decimal, interest: Decimal): Decimal {
+    if (balance.lte(0)) return new Decimal(0);
+
+    if (this.fixedMinPayment) {
+      return Decimal.min(balance.plus(interest), this.fixedMinPayment);
+    }
+
+    return Decimal.max(
+      Decimal.min(balance, MIN_PAYMENT_THRESHOLD),
+      balance.mul(0.01).plus(interest),
+    );
+  }
+}
+
+class PaymentCell {
+  public readonly startBalance: Decimal;
+  public readonly interest: Decimal;
+  public readonly minPayment: Decimal;
+  public payment: Decimal;
+
+  constructor(
+    public readonly debt: Debt,
+    priorCell?: PaymentCell,
+  ) {
+    this.startBalance = priorCell ? priorCell.endBalance : debt.startBalance;
+
+    // Monthly interest calculation
+    this.interest = this.startBalance.mul(debt.rate.div(12));
+
+    // Calculate minimum payment required
+    this.minPayment = debt.getMinPayment(this.startBalance, this.interest);
+
+    // Initial payment is just the minimum
+    this.payment = this.minPayment;
+
+    // If min payment covers full balance, zero out interest (payoff today)
+    // logic: if we pay full balance, we pay full balance + accrued interest up to now?
+    // The original logic was: if payment >= startBalance, interest = 0.
+    // This implies if you pay it off, you don't pay interest? That's slightly inaccurate for trailing interest,
+    // but acceptable for simple projection. I'll keep similar logic but clearer.
+    if (this.payment.gte(this.startBalance.plus(this.interest))) {
+      this.payment = this.startBalance.plus(this.interest);
+    }
+  }
+
+  get endBalance(): Decimal {
+    return Decimal.max(
+      new Decimal(0),
+      this.startBalance.plus(this.interest).minus(this.payment),
+    );
+  }
+
+  get principal(): Decimal {
+    return Decimal.max(0, this.payment.minus(this.interest));
+  }
+
+  isMinPayment(): boolean {
+    // It's a minimum payment if it matches minPayment AND we aren't just clearing the final balance
+    return this.payment.eq(this.minPayment) && this.endBalance.gt(0);
+  }
+
+  // Add extra payment to this cell
+  addPayment(amount: Decimal): Decimal {
+    const maxPayment = this.startBalance.plus(this.interest);
+    const availableRoom = maxPayment.minus(this.payment);
+    const actualAdd = Decimal.min(amount, availableRoom);
+
+    this.payment = this.payment.plus(actualAdd);
+    return amount.minus(actualAdd); // Return remaining amount
+  }
+}
+
+class Period {
+  public readonly cells: PaymentCell[];
+
+  constructor(
+    public readonly month: Temporal.PlainYearMonth,
+    cells: PaymentCell[],
+  ) {
+    this.cells = cells;
+  }
+
+  static createFirst(
+    debts: Debt[],
+    startDate: Temporal.PlainYearMonth,
+  ): Period {
+    const cells = debts.map((d) => new PaymentCell(d));
+    return new Period(startDate, cells);
+  }
+
+  createNext(): Period {
+    const nextCells = this.cells.map(
+      (cell) => new PaymentCell(cell.debt, cell),
+    );
+    return new Period(this.month.add({ months: 1 }), nextCells);
+  }
+
+  get totalMinPayment(): Decimal {
+    return Decimal.sum(...this.cells.map((c) => c.minPayment));
+  }
+
+  get totalPayment(): Decimal {
+    return Decimal.sum(...this.cells.map((c) => c.payment));
+  }
+
+  get totalInterest(): Decimal {
+    return Decimal.sum(...this.cells.map((c) => c.interest));
+  }
+
+  get remainingBalance(): Decimal {
+    return Decimal.sum(...this.cells.map((c) => c.endBalance));
+  }
+}
+
+export class PayoffCalculator {
+  constructor(
+    private debts: Debt[],
+    private totalMonthlyPayment: Decimal,
+    private strategy: PayoffStrategyType = PayoffStrategyType.Avalanche,
+    private startDate: Temporal.PlainYearMonth = Temporal.Now.plainDateISO().toPlainYearMonth(),
+  ) {}
+
+  public calculate(): PayoffScheduleResult {
+    const periods: Period[] = [];
+
+    // Initialize first period
+    let currentPeriod = Period.createFirst(this.debts, this.startDate);
+
+    // Distribute payments for first period
+    this.distributePayments(currentPeriod);
+    periods.push(currentPeriod);
+
+    // Simulation loop
+    while (
+      currentPeriod.remainingBalance.gt(0) &&
+      periods.length < MAX_MONTHS
+    ) {
+      currentPeriod = currentPeriod.createNext();
+      this.distributePayments(currentPeriod);
+      periods.push(currentPeriod);
+    }
+
+    return this.formatResult(periods);
+  }
+
+  private distributePayments(period: Period) {
+    // 1. Calculate available extra money (Total Budget - Sum of Minimums)
+    // Note: The cells are initialized with minPayment already.
+    let extraMoney = Decimal.max(
+      0,
+      this.totalMonthlyPayment.minus(period.totalMinPayment),
+    );
+
+    if (extraMoney.lte(0)) return;
+
+    // 2. Sort debts by strategy
+    const sortedCells = [...period.cells].filter((c) => c.startBalance.gt(0));
+
+    if (this.strategy === PayoffStrategyType.Avalanche) {
+      // Highest rate first
+      sortedCells.sort((a, b) => b.debt.rate.cmp(a.debt.rate));
+    } else {
+      // Lowest balance first (Snowball)
+      sortedCells.sort((a, b) => a.startBalance.cmp(b.startBalance));
+    }
+
+    // 3. Apply extra payments
+    for (const cell of sortedCells) {
+      if (extraMoney.lte(0)) break;
+      extraMoney = cell.addPayment(extraMoney);
+    }
+  }
+
+  private formatResult(periods: Period[]): PayoffScheduleResult {
+    const totalInterestPaid = Decimal.sum(
+      ...periods.map((p) => p.totalInterest),
+    );
+    const finalPeriod = periods[periods.length - 1];
+
+    const months: MonthlySchedule[] = periods.map((p, idx) => ({
+      month: idx,
+      date: p.month.toString(),
+      payments: p.cells.map((c) => ({
+        debtId: c.debt.id,
+        payment: c.payment,
+        interest: c.interest,
+        principal: c.principal,
+        newBalance: c.endBalance,
+        isMinimum: c.isMinPayment(),
+      })),
+      totalPayment: p.totalPayment,
+      totalInterest: p.totalInterest,
+      remainingBalance: p.remainingBalance,
+    }));
+
+    return {
+      strategy: this.strategy,
+      totalMonthlyPayment: this.totalMonthlyPayment,
+      months,
+      totalInterestPaid,
+      debtFreeDate: finalPeriod.month.toString(),
+      monthsToPayoff: periods.length,
+    };
+  }
 }
