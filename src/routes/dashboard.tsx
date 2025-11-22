@@ -34,7 +34,7 @@ function Dashboard() {
   const { data: workbooks } = useLiveQuery((q) =>
     q
       .from({ workbook: workbooksCollection })
-      .orderBy(({ workbook }) => workbook.name),
+      .orderBy(({ workbook }) => workbook.updatedAt, 'desc'),
   );
 
   const handleSignOut = async () => {
@@ -47,6 +47,7 @@ function Dashboard() {
       id: uuidv7(),
       name: 'My Workbook',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   };
 

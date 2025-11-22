@@ -1,5 +1,5 @@
 import { useSession } from '@/lib/client/auth-client';
-import { debtsCollection } from '@/lib/client/collections';
+import { debtsCollection, workbooksCollection } from '@/lib/client/collections';
 import { populateDemoDebts } from '@/lib/client/demo-debts';
 import { Debt, PayoffCalculator } from '@/lib/universal/payoff';
 import { DebtType, PayoffStrategyType } from '@/lib/universal/types';
@@ -22,6 +22,13 @@ function WorkbookDetail() {
   const navigate = useNavigate();
   const { id: workbookId } = Route.useParams();
   const { data: session, isPending } = useSession();
+
+  const { data: workbook } = useLiveQuery((q) =>
+    q
+      .from({ workbook: workbooksCollection })
+      .where(({ workbook }) => eq(workbook.id, workbookId))
+      .findOne(),
+  );
 
   const { data: allDebts } = useLiveQuery((q) =>
     q
@@ -147,7 +154,7 @@ function WorkbookDetail() {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <WorkbookNavBar user={session.user} />
+      <WorkbookNavBar user={session.user} workbook={workbook} />
 
       {/* Main Content */}
       <main className="flex-1 w-full mx-auto overflow-hidden">

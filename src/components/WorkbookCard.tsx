@@ -15,7 +15,7 @@ interface WorkbookCardProps {
   workbook: {
     id: string;
     name: string;
-    createdAt: string;
+    updatedAt: string;
   };
 }
 
@@ -45,8 +45,8 @@ export function WorkbookCard({ workbook }: WorkbookCardProps) {
               <div>
                 <CardTitle className="text-xl">{workbook.name}</CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  Created{' '}
-                  {new Date(workbook.createdAt).toLocaleDateString('en-US', {
+                  Updated{' '}
+                  {new Date(workbook.updatedAt).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',

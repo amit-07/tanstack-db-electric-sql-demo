@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
+const timestampField = z
+  .string()
+  .transform((val) => new Date(val).toISOString());
+
 export const workbookSchema = z.object({
   id: z.uuid(),
   name: z.string().max(48),
-  createdAt: z.iso.datetime(),
+  createdAt: timestampField,
+  updatedAt: timestampField,
 });
 
 export const debtSchema = z.object({
@@ -14,4 +19,6 @@ export const debtSchema = z.object({
   rate: z.string(),
   balance: z.string(),
   minPayment: z.string(),
+  createdAt: timestampField,
+  updatedAt: timestampField,
 });
