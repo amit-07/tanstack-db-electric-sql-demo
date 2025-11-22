@@ -1,14 +1,7 @@
 import { Card, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { UserMenu } from '@/components/UserMenu';
 import { WorkbookCard } from '@/components/WorkbookCard';
-import { authClient, useSession } from '@/lib/client/auth-client';
+import { useSession } from '@/lib/client/auth-client';
 import { workbooksCollection } from '@/lib/client/collections';
 import { useLiveQuery } from '@tanstack/react-db';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -37,18 +30,15 @@ function Dashboard() {
       .orderBy(({ workbook }) => workbook.updatedAt, 'desc'),
   );
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    navigate({ to: '/' });
-  };
-
   const handleCreateWorkbook = async () => {
+    const id = uuidv7();
     workbooksCollection.insert({
-      id: uuidv7(),
+      id: id,
       name: 'My Workbook',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    navigate({ to: '/w/$id', params: { id } });
   };
 
   if (isPending) {
@@ -66,45 +56,13 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
-      <nav className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-xl font-bold text-foreground tracking-tight">
               Debt Payoff Calculator
             </h1>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none focus:ring-2 focus:ring-border rounded-full">
-                  {session.user.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name}
-                      className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
-                      <span className="text-muted-foreground font-medium">
-                        {session.user.name?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{session.user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserMenu user={session.user} />
           </div>
         </div>
       </nav>

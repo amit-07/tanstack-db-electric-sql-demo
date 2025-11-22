@@ -33,3 +33,16 @@ export const updateWorkbook = createServerFn({ method: 'POST' })
     ]);
     return { workbook, txid };
   });
+
+export const deleteWorkbook = createServerFn({ method: 'POST' })
+  .inputValidator(workbookSchema.pick({ id: true }))
+  .handler(async ({ data }) => {
+    await authWorkbook(data.id);
+    const [workbook, [{ txid }]] = await db.$transaction([
+      db.workbook.delete({
+        where: { id: data.id },
+      }),
+      getTxId(),
+    ]);
+    return { workbook, txid };
+  });

@@ -1,7 +1,11 @@
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/react-db';
 import { createDebt, deleteDebt, updateDebt } from '../functions/debts';
-import { createWorkbook, updateWorkbook } from '../functions/workbooks';
+import {
+  createWorkbook,
+  deleteWorkbook,
+  updateWorkbook,
+} from '../functions/workbooks';
 import { debtSchema, workbookSchema } from '../universal/entities';
 
 // Construct absolute URL for Electric sync
@@ -41,6 +45,15 @@ export const workbooksCollection = createCollection(
       }
       const { txid } = await updateWorkbook({
         data: { id: original.id, name: changes.name },
+      });
+
+      return { txid };
+    },
+
+    onDelete: async ({ transaction }) => {
+      const deletedItem = transaction.mutations[0].original;
+      const { txid } = await deleteWorkbook({
+        data: { id: deletedItem.id },
       });
 
       return { txid };
