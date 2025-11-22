@@ -4,10 +4,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { formatNumber, parseNumericInput } from '@/lib/client/utils';
+import { Button } from '@/components/ui/button';
+import { cn, formatNumber, parseNumericInput } from '@/lib/client/utils';
 import { PayoffStrategyType } from '@/lib/universal/types';
 import Decimal from 'decimal.js';
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, Info } from 'lucide-react';
+import {
+  ArrowDownNarrowWide,
+  ArrowUpNarrowWide,
+  Info,
+  MinusCircle,
+  PlusCircle,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface PayoffStrategyProps {
@@ -68,6 +75,24 @@ export function PayoffStrategy({
     }
   };
 
+  const handleAdjustment = (amount: number) => {
+    const current = parseNumericInput(localValue);
+    const safeCurrent = isNaN(current)
+      ? totalMonthlyPayment.toNumber()
+      : current;
+    const next = safeCurrent + amount;
+    const constrained = Math.max(next, totalMinPayment.toNumber());
+
+    setLocalValue(constrained);
+    onTotalMonthlyPaymentChange(new Decimal(constrained));
+  };
+
+  const handleSetToMin = () => {
+    const minValue = totalMinPayment.toNumber();
+    setLocalValue(minValue);
+    onTotalMonthlyPaymentChange(totalMinPayment);
+  };
+
   return (
     <div className="bg-card rounded-2xl p-4 border border-border mt-3">
       <div className="flex items-start gap-4">
@@ -79,24 +104,51 @@ export function PayoffStrategy({
           >
             Monthly Budget
           </label>
-          <div className="relative group mb-2">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium group-focus-within:text-primary transition-colors text-sm">
-              $
+          <div className="flex items-center gap-2 mb-2">
+            <div className="relative group flex-1">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium group-focus-within:text-primary transition-colors text-sm">
+                $
+              </div>
+              <input
+                id="monthly-payment"
+                type="text"
+                value={displayValue}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className="w-full pl-6 pr-3 py-2 bg-muted/30 border-0 rounded-lg text-base font-semibold text-foreground focus:ring-2 focus:ring-primary/10 focus:bg-muted/50 transition-all outline-none placeholder:text-muted-foreground/50"
+              />
             </div>
-            <input
-              id="monthly-payment"
-              type="text"
-              value={displayValue}
-              onChange={handleChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full pl-6 pr-3 py-2 bg-muted/30 border-0 rounded-lg text-base font-semibold text-foreground focus:ring-2 focus:ring-primary/10 focus:bg-muted/50 transition-all outline-none placeholder:text-muted-foreground/50"
-            />
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleAdjustment(-50)}
+                disabled={
+                  parseNumericInput(localValue) <= totalMinPayment.toNumber()
+                }
+                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+              >
+                <MinusCircle className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleAdjustment(50)}
+                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+              >
+                <PlusCircle className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-xs text-muted-foreground font-medium">
+            <button
+              type="button"
+              onClick={handleSetToMin}
+              className="text-xs text-muted-foreground font-medium hover:text-foreground transition-colors cursor-pointer"
+            >
               Min: ${formatNumber(totalMinPayment)}
-            </p>
+            </button>
             {totalMonthlyPayment.gt(0) &&
               totalMonthlyPayment.lt(totalMinPayment) && (
                 <p className="text-[10px] text-destructive font-bold bg-destructive/10 px-1.5 py-0.5 rounded-full whitespace-nowrap">
@@ -132,35 +184,39 @@ export function PayoffStrategy({
           <div className="flex flex-col gap-2">
             <button
               onClick={() => onStrategyChange(PayoffStrategyType.Avalanche)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all w-full text-left ${
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all w-full text-left',
                 strategy === PayoffStrategyType.Avalanche
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-none'
-                  : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              }`}
+                  : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+              )}
             >
               <ArrowDownNarrowWide
-                className={`h-3.5 w-3.5 ${
+                className={cn(
+                  'h-3.5 w-3.5',
                   strategy === PayoffStrategyType.Avalanche
                     ? 'text-indigo-600'
-                    : 'text-muted-foreground/70'
-                }`}
+                    : 'text-muted-foreground/70',
+                )}
               />
               Avalanche
             </button>
             <button
               onClick={() => onStrategyChange(PayoffStrategyType.Snowball)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all w-full text-left ${
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all w-full text-left',
                 strategy === PayoffStrategyType.Snowball
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-none'
-                  : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              }`}
+                  : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+              )}
             >
               <ArrowUpNarrowWide
-                className={`h-3.5 w-3.5 ${
+                className={cn(
+                  'h-3.5 w-3.5',
                   strategy === PayoffStrategyType.Snowball
                     ? 'text-indigo-600'
-                    : 'text-muted-foreground/70'
-                }`}
+                    : 'text-muted-foreground/70',
+                )}
               />
               Snowball
             </button>
