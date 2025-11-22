@@ -6,7 +6,7 @@ import { DebtType, PayoffStrategyType } from '@/lib/universal/types';
 import { eq, useLiveQuery } from '@tanstack/react-db';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import Decimal from 'decimal.js';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 import { DebtsList } from './-components/DebtsList';
 import { PayoffSchedule } from './-components/PayoffSchedule';
@@ -74,35 +74,31 @@ function WorkbookDetail() {
   }, [totalMinPayment]);
 
   // Calculate payoff schedule
-  const payoffSchedule = useMemo(() => {
-    if (debts.length === 0 || totalMonthlyPayment.eq(0)) {
-      return null;
-    }
+  const payoffSchedule =
+    debts.length === 0 || totalMonthlyPayment.eq(0)
+      ? null
+      : (() => {
+          const payment = totalMonthlyPayment;
+          if (payment.lt(totalMinPayment)) {
+            return null;
+          }
 
-    const payment = totalMonthlyPayment;
-    if (payment.lt(totalMinPayment)) {
-      return null;
-    }
+          const payoffDebts = debts.map((d) => {
+            const isFixedPayment =
+              d.type === DebtType.Auto || d.type === DebtType.Home;
 
-    // Convert debts to PayoffDebt format
-    const payoffDebts = debts.map((d) => {
-      // Auto and home loans have fixed payments, others are percentage-based
-      const isFixedPayment =
-        d.type === DebtType.Auto || d.type === DebtType.Home;
+            return new Debt({
+              id: d.id,
+              name: d.name,
+              startBalance: d.balance,
+              rate: d.rate.div(100),
+              fixedMinPayment: isFixedPayment ? d.minPayment : undefined,
+            });
+          });
 
-      return new Debt({
-        id: d.id,
-        name: d.name,
-        startBalance: d.balance,
-        rate: d.rate.div(100), // Convert percentage to decimal (e.g., 5.5% -> 0.055)
-        fixedMinPayment: isFixedPayment ? d.minPayment : undefined,
-      });
-    });
-
-    // Generate payoff schedule
-    const calculator = new PayoffCalculator(payoffDebts, payment, strategy);
-    return calculator.calculate();
-  }, [debts, totalMonthlyPayment, strategy, totalMinPayment]);
+          const calculator = new PayoffCalculator(payoffDebts, payment, strategy);
+          return calculator.calculate();
+        })();
 
   useEffect(() => {
     if (!isPending && !session) {

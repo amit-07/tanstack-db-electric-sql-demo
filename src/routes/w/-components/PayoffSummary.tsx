@@ -1,7 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { PayoffScheduleResult } from '@/lib/universal/payoff';
 import { Temporal } from '@js-temporal/polyfill';
-import { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -18,35 +17,33 @@ interface PayoffSummaryProps {
 }
 
 export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
-  const data = useMemo(() => {
-    let previousPaidOffDebts = new Set<string>();
+  let previousPaidOffDebts = new Set<string>();
 
-    return payoffSchedule.months.map((m) => {
-      const currentPaidOffDebts = new Set(
-        m.payments.filter((p) => p.newBalance.eq(0)).map((p) => p.debtId),
-      );
+  const data = payoffSchedule.months.map((m) => {
+    const currentPaidOffDebts = new Set(
+      m.payments.filter((p) => p.newBalance.eq(0)).map((p) => p.debtId),
+    );
 
-      const newlyPaidOffDebts = [...currentPaidOffDebts].filter(
-        (id) => !previousPaidOffDebts.has(id),
-      );
+    const newlyPaidOffDebts = [...currentPaidOffDebts].filter(
+      (id) => !previousPaidOffDebts.has(id),
+    );
 
-      previousPaidOffDebts = currentPaidOffDebts;
+    previousPaidOffDebts = currentPaidOffDebts;
 
-      return {
-        date: m.date,
-        balance: m.remainingBalance.toNumber(),
-        displayDate: Temporal.PlainYearMonth.from(m.date)
-          .toPlainDate({ day: 1 })
-          .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
-        fullDisplayDate: Temporal.PlainYearMonth.from(m.date)
-          .toPlainDate({ day: 1 })
-          .toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-        isStartOfYear: m.date.endsWith('-01'),
-        newlyPaidOffCount: newlyPaidOffDebts.length,
-        totalPaidOffCount: currentPaidOffDebts.size,
-      };
-    });
-  }, [payoffSchedule.months]);
+    return {
+      date: m.date,
+      balance: m.remainingBalance.toNumber(),
+      displayDate: Temporal.PlainYearMonth.from(m.date)
+        .toPlainDate({ day: 1 })
+        .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
+      fullDisplayDate: Temporal.PlainYearMonth.from(m.date)
+        .toPlainDate({ day: 1 })
+        .toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      isStartOfYear: m.date.endsWith('-01'),
+      newlyPaidOffCount: newlyPaidOffDebts.length,
+      totalPaidOffCount: currentPaidOffDebts.size,
+    };
+  });
 
   const startOfYearDates = data
     .filter((d) => d.isStartOfYear)

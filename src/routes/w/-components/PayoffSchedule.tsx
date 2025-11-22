@@ -10,7 +10,6 @@ import {
 import { cn } from '@/lib/client/utils';
 import { PayoffScheduleResult } from '@/lib/universal/payoff';
 import { Temporal } from '@js-temporal/polyfill';
-import { useMemo } from 'react';
 import { WorkbookDebt } from './DebtsList';
 
 interface PayoffScheduleProps {
@@ -26,22 +25,14 @@ export function PayoffSchedule({
   showAllMonths,
   onShowAllMonthsChange,
 }: PayoffScheduleProps) {
-  // Determine visible months for payoff table
-  const visibleMonths = useMemo(() => {
-    if (showAllMonths) return payoffSchedule.months;
-    return payoffSchedule.months.slice(0, 24);
-  }, [payoffSchedule, showAllMonths]);
+  const visibleMonths = showAllMonths
+    ? payoffSchedule.months
+    : payoffSchedule.months.slice(0, 24);
 
-  // Order debts based on sortedDebts from payoff calculator
-  const orderedDebts = useMemo(() => {
-    // Create a map of debt ID to WorkbookDebt for quick lookup
-    const debtMap = new Map(debts.map((debt) => [debt.id, debt]));
-
-    // Map sortedDebts from payoff result to WorkbookDebt objects
-    return payoffSchedule.sortedDebts
-      .map((sortedDebt) => debtMap.get(sortedDebt.id))
-      .filter((debt): debt is WorkbookDebt => debt !== undefined);
-  }, [debts, payoffSchedule.sortedDebts]);
+  const debtMap = new Map(debts.map((debt) => [debt.id, debt]));
+  const orderedDebts = payoffSchedule.sortedDebts
+    .map((sortedDebt) => debtMap.get(sortedDebt.id))
+    .filter((debt): debt is WorkbookDebt => debt !== undefined);
 
   return (
     <div className="bg-card rounded-2xl overflow-hidden border border-border">
