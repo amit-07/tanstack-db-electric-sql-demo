@@ -7,6 +7,8 @@ const timestampField = z
 export const workbookSchema = z.object({
   id: z.uuidv7(),
   name: z.string().max(48),
+  monthlyPayment: z.string(),
+  strategy: z.enum(['avalanche', 'snowball']),
   createdAt: timestampField,
   updatedAt: timestampField,
 });

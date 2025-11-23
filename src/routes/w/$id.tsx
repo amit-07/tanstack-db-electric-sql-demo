@@ -49,16 +49,18 @@ function WorkbookDetail() {
     }));
 
   // Payoff calculator state
-  const [strategy, setStrategy] = useState<PayoffStrategyType>(
-    PayoffStrategyType.Avalanche,
-  );
   const [showAllMonths, setShowAllMonths] = useState(false);
-
-  // Default to total minimum payment
-  const [totalMonthlyPayment, setTotalMonthlyPayment] = useState<Decimal>(
-    new Decimal(0),
-  );
   const [newDebtId, setNewDebtId] = useState<string | null>(null);
+
+  // Get strategy and monthlyPayment from workbook, with defaults
+  const strategy: PayoffStrategyType =
+    workbook?.strategy === 'snowball'
+      ? PayoffStrategyType.Snowball
+      : PayoffStrategyType.Avalanche;
+
+  const totalMonthlyPayment = workbook?.monthlyPayment
+    ? new Decimal(workbook.monthlyPayment)
+    : new Decimal(0);
 
   // Update totalMonthlyPayment when totalMinPayment changes
   const totalMinPayment = debts.reduce(
@@ -67,11 +69,13 @@ function WorkbookDetail() {
   );
   useEffect(() => {
     // Only auto-update when totalMinPayment increases, not when user is typing
-    if (totalMinPayment.gt(totalMonthlyPayment)) {
-      setTotalMonthlyPayment(totalMinPayment);
+    if (totalMinPayment.gt(totalMonthlyPayment) && workbook) {
+      workbooksCollection.update(workbook.id, (draft) => {
+        draft.monthlyPayment = totalMinPayment.toString();
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalMinPayment]);
+  }, [totalMinPayment, workbook?.id]);
 
   // Calculate payoff schedule
   const payoffSchedule =
@@ -159,6 +163,20 @@ function WorkbookDetail() {
     debtsCollection.delete(debtId);
   };
 
+  const handleStrategyChange = (newStrategy: PayoffStrategyType) => {
+    if (!workbook) return;
+    workbooksCollection.update(workbook.id, (draft) => {
+      draft.strategy = newStrategy;
+    });
+  };
+
+  const handleMonthlyPaymentChange = (value: Decimal) => {
+    if (!workbook) return;
+    workbooksCollection.update(workbook.id, (draft) => {
+      draft.monthlyPayment = value.toString();
+    });
+  };
+
   if (isPending) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -198,11 +216,9 @@ function WorkbookDetail() {
               <div className="max-w-xl ml-auto mr-auto lg:mr-0">
                 <PayoffStrategy
                   strategy={strategy}
-                  onStrategyChange={setStrategy}
+                  onStrategyChange={handleStrategyChange}
                   totalMonthlyPayment={totalMonthlyPayment}
-                  onTotalMonthlyPaymentChange={(value) =>
-                    setTotalMonthlyPayment(value)
-                  }
+                  onTotalMonthlyPaymentChange={handleMonthlyPaymentChange}
                   totalMinPayment={totalMinPayment}
                 />
               </div>

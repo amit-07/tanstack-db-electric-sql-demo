@@ -40,11 +40,8 @@ export const workbooksCollection = createCollection(
 
     onUpdate: async ({ transaction }) => {
       const { original, changes } = transaction.mutations[0];
-      if (!changes.name) {
-        throw new Error('Name is required');
-      }
       const { txid } = await updateWorkbook({
-        data: { id: original.id, name: changes.name },
+        data: { ...changes, id: original.id },
       });
 
       return { txid };

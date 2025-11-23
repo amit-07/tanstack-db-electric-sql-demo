@@ -25,12 +25,14 @@ model Debt {
 }
 
 model Workbook {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  name      String   @db.VarChar(48)
-  ownerId   String   @db.Uuid
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) @db.Timestamptz
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz
+  id             String   @id @default(uuid(7)) @db.Uuid
+  name           String   @db.VarChar(48)
+  ownerId        String   @db.Uuid
+  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  monthlyPayment Decimal  @default(0) @db.Decimal(10, 2)
+  strategy       String   @default("avalanche") @db.VarChar(12)
+  createdAt      DateTime @default(now()) @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @db.Timestamptz
 
   debts Debt[]
 
