@@ -57,14 +57,14 @@ function Dashboard() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Abstract Background Hotspots */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Top Left - Indigo/Blue */}
-        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-500/20 blur-[120px]" />
+        {/* Top Left - Green */}
+        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-green-500/10 blur-[120px]" />
 
-        {/* Top Right - Purple */}
-        <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] rounded-full bg-purple-600/10 blur-[100px]" />
+        {/* Top Right - Green */}
+        <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] rounded-full bg-green-500/5 blur-[100px]" />
 
-        {/* Center/Bottom - Subtle Blue */}
-        <div className="absolute top-[10%] left-[20%] w-[50%] h-[50%] rounded-full bg-blue-400/20 blur-[140px]" />
+        {/* Center/Bottom - Subtle Green */}
+        <div className="absolute top-[10%] left-[20%] w-[50%] h-[50%] rounded-full bg-green-500/10 blur-[140px]" />
       </div>
 
       {/* Navigation Bar */}

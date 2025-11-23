@@ -60,7 +60,7 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
           cx="10"
           cy="10"
           r="10"
-          fill="#10b981"
+          fill="oklch(72.3% 0.219 149.579)"
           stroke="white"
           strokeWidth="2"
         />
@@ -83,11 +83,11 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Debt Free Date */}
-      <Card className="border-0 bg-linear-to-br from-indigo-500 to-purple-600 text-white rounded-2xl overflow-hidden relative">
+      <Card className="border-0 bg-gradient-to-br from-green-500 to-green-700 text-white rounded-2xl overflow-hidden relative">
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black/10 rounded-full blur-xl"></div>
         <CardContent className="px-6 py-3 relative z-10">
-          <div className="text-indigo-100 text-sm font-medium mb-1">
+          <div className="text-teal-100 text-sm font-medium mb-1">
             Debt Free By
           </div>
           <div className="text-3xl font-bold tracking-tight">
@@ -98,7 +98,7 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
                 year: 'numeric',
               })}
           </div>
-          <div className="mt-1 text-indigo-200 text-sm font-medium">
+          <div className="mt-1 text-teal-200 text-sm font-medium">
             Pay off in{' '}
             {payoffSchedule.monthsToPayoff > 24
               ? `${(payoffSchedule.monthsToPayoff / 12).toFixed(1)} years`
@@ -144,8 +144,16 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
               >
                 <defs>
                   <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="oklch(72.3% 0.219 149.579)"
+                      stopOpacity={0.2}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="oklch(72.3% 0.219 149.579)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" hide axisLine={false} tickLine={false} />
@@ -170,7 +178,7 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
                             </span>
                           </p>
                           {dataPoint.newlyPaidOffCount > 0 && (
-                            <p className="text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                            <p className="text-green-600 font-medium mt-1 flex items-center gap-1">
                               <DollarSign className="w-3 h-3" />
                               {dataPoint.totalPaidOffCount} debt
                               {dataPoint.totalPaidOffCount !== 1
@@ -202,7 +210,7 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
                 <Area
                   type="monotone"
                   dataKey="balance"
-                  stroke="#10b981" // emerald-500
+                  stroke="oklch(72.3% 0.219 149.579)"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorBalance)"
