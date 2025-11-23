@@ -1,28 +1,28 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { authClient, useSession } from '@/lib/client/auth-client'
-import { Cloud, TrendingDown, Calendar } from 'lucide-react'
-import { useEffect } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { authClient, useSession } from '@/lib/client/auth-client';
+import { Cloud, TrendingDown, Calendar } from 'lucide-react';
+import { useEffect } from 'react';
 
-export const Route = createFileRoute('/')({ component: LandingPage })
+export const Route = createFileRoute('/')({ component: LandingPage });
 
 function LandingPage() {
-  const navigate = useNavigate()
-  const { data: session } = useSession()
+  const navigate = useNavigate();
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (session) {
-      navigate({ to: '/dashboard' })
+      navigate({ to: '/dashboard' });
     }
-  }, [session, navigate])
+  }, [session, navigate]);
 
   const handleGoogleSignIn = async () => {
     await authClient.signIn.social({
       provider: 'google',
       callbackURL: '/dashboard',
-    })
-  }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 sm:p-6 font-sans text-foreground">
@@ -102,7 +102,8 @@ function LandingPage() {
                   Smart Strategies
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Compare Avalanche vs. Snowball to find your fastest debt-free path.
+                  Compare Avalanche vs. Snowball to find your fastest debt-free
+                  path.
                 </p>
               </div>
             </div>
@@ -139,5 +140,5 @@ function LandingPage() {
         </div>
       </Card>
     </div>
-  )
+  );
 }

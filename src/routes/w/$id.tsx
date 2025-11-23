@@ -1,6 +1,6 @@
 import { useSession } from '@/lib/client/auth-client';
 import { debtsCollection, workbooksCollection } from '@/lib/client/collections';
-import { populateDemoDebts } from '@/lib/client/demo-debts';
+import { populateDemoDebts } from '@/lib/fn/debts';
 import { Debt, PayoffCalculator } from '@/lib/universal/payoff';
 import { DebtType, PayoffStrategyType } from '@/lib/universal/types';
 import { eq, useLiveQuery } from '@tanstack/react-db';
@@ -96,7 +96,11 @@ function WorkbookDetail() {
             });
           });
 
-          const calculator = new PayoffCalculator(payoffDebts, payment, strategy);
+          const calculator = new PayoffCalculator(
+            payoffDebts,
+            payment,
+            strategy,
+          );
           return calculator.calculate();
         })();
 
@@ -106,8 +110,8 @@ function WorkbookDetail() {
     }
   }, [session, isPending, navigate]);
 
-  const handlePopulateDemoDebts = () => {
-    populateDemoDebts(workbookId);
+  const handlePopulateDemoDebts = async () => {
+    await populateDemoDebts({ data: { workbookId } });
   };
 
   const handleAddDebt = () => {

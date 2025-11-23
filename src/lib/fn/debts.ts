@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
+import { z } from 'zod';
 import { db } from '../server/db';
 import { debtSchema } from '../universal/entities';
 import { DebtType } from '../universal/types';
@@ -117,6 +118,72 @@ export const deleteDebt = createServerFn({ method: 'POST' })
         balance: debt.balance.toString(),
         minPayment: debt.minPayment.toString(),
       },
+      txid,
+    };
+  });
+
+// Demo debt data template
+// Credit cards use 1-2% of balance + interest for minimum payments
+// Auto and home loans have fixed monthly payments
+const demoDebtsTemplate = [
+  {
+    name: 'Credit Card - Chase',
+    type: DebtType.Credit,
+    rate: '18.99',
+    balance: '15420.00',
+    minPayment: '397.00',
+  },
+  {
+    name: 'Student Loan',
+    type: DebtType.School,
+    rate: '4.50',
+    balance: '32500.00',
+    minPayment: '447.00',
+  },
+  {
+    name: 'Car Loan',
+    type: DebtType.Auto,
+    rate: '6.25',
+    balance: '8200.00',
+    minPayment: '185.00',
+  },
+  {
+    name: 'Credit Card - Discover',
+    type: DebtType.Credit,
+    rate: '24.99',
+    balance: '3850.00',
+    minPayment: '119.00',
+  },
+  {
+    name: 'Personal Loan',
+    type: DebtType.Personal,
+    rate: '11.99',
+    balance: '19500.00',
+    minPayment: '390.00',
+  },
+];
+
+export const populateDemoDebts = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ workbookId: z.uuidv7() }))
+  .handler(async ({ data }) => {
+    await authWorkbook(data.workbookId);
+
+    const [debts, [{ txid }]] = await db.$transaction([
+      db.debt.createMany({
+        data: demoDebtsTemplate.map((debt) => ({
+          workbookId: data.workbookId,
+          name: debt.name,
+          type: debt.type,
+          rate: debt.rate,
+          balance: debt.balance,
+          minPayment: debt.minPayment,
+        })),
+      }),
+      getTxId(),
+    ]);
+
+    return {
+      count: debts.count,
       txid,
     };
   });
