@@ -34,7 +34,6 @@ export const workbooksCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const newItem = transaction.mutations[0].modified;
       const { txid } = await createWorkbook({ data: newItem });
-
       return { txid };
     },
 
@@ -43,7 +42,6 @@ export const workbooksCollection = createCollection(
       const { txid } = await updateWorkbook({
         data: { ...changes, id: original.id },
       });
-
       return { txid };
     },
 
@@ -52,7 +50,6 @@ export const workbooksCollection = createCollection(
       const { txid } = await deleteWorkbook({
         data: { id: deletedItem.id },
       });
-
       return { txid };
     },
   }),
@@ -71,7 +68,6 @@ export const debtsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const newItem = transaction.mutations[0].modified;
       const { txid } = await createDebt({ data: newItem });
-
       return { txid };
     },
 
@@ -83,7 +79,6 @@ export const debtsCollection = createCollection(
           ...changes,
         },
       });
-
       return { txid };
     },
 
@@ -92,7 +87,6 @@ export const debtsCollection = createCollection(
       const { txid } = await deleteDebt({
         data: { id: deletedItem.id },
       });
-
       return { txid };
     },
   }),

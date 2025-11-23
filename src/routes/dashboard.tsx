@@ -35,10 +35,12 @@ function Dashboard() {
     workbooksCollection.insert({
       id: id,
       name: 'My Workbook',
+      monthlyPayment: '0',
+      strategy: 'avalanche',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    navigate({ to: '/w/$id', params: { id } });
+    navigate({ to: '/w/$id', params: { id }, reloadDocument: true });
   };
 
   if (isPending) {
