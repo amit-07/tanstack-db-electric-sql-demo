@@ -4,11 +4,6 @@ This is a debt payoff calculator built to demonstrate the power of [TanStack DB]
 
 It helps users organize their debts, choose a payoff strategy (Avalanche vs. Snowball), and visualize their journey to becoming debt-free.
 
-## 📺 Deep Dive
-
-I recorded a deep dive video explaining how this app works and how TanStack DB integrates with Electric SQL.
-
-https://www.youtube.com/watch?v=ae05QlM50DI
 
 ## 🚀 Tech Stack
 
