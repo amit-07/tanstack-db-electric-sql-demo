@@ -4,6 +4,10 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { db } from './db';
 
 export const auth = betterAuth({
+  trustedOrigins: [
+    'http://localhost:3000',
+    'http://localhost:3033', // add this line
+  ],
   plugins: [tanstackStartCookies()],
   database: prismaAdapter(db, {
     provider: 'postgresql',

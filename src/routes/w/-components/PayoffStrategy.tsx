@@ -107,7 +107,7 @@ export function PayoffStrategy({
           <div className="flex items-center gap-2 mb-2">
             <div className="relative group flex-1">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium group-focus-within:text-primary transition-colors text-sm">
-                $
+                ₹
               </div>
               <input
                 id="monthly-payment"
@@ -147,7 +147,7 @@ export function PayoffStrategy({
               onClick={handleSetToMin}
               className="text-xs text-muted-foreground font-medium hover:text-foreground transition-colors cursor-pointer"
             >
-              Min: ${formatNumber(totalMinPayment)}
+              Min: ₹{formatNumber(totalMinPayment)}
             </button>
             {totalMonthlyPayment.gt(0) &&
               totalMonthlyPayment.lt(totalMinPayment) && (

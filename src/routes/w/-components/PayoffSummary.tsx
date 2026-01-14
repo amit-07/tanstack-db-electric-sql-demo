@@ -74,7 +74,7 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
           fontWeight="bold"
           style={{ pointerEvents: 'none' }}
         >
-          $
+          ₹
         </text>
       </g>
     );
@@ -118,9 +118,9 @@ export function PayoffSummary({ payoffSchedule }: PayoffSummaryProps) {
           <div className="text-3xl font-bold text-foreground tracking-tight">
             {payoffSchedule.totalInterestPaid
               .toNumber()
-              .toLocaleString('en-US', {
+              .toLocaleString('en-IN', {
                 style: 'currency',
-                currency: 'USD',
+                currency: 'INR',
                 maximumFractionDigits: 0,
               })}
           </div>

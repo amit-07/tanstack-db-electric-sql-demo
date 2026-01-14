@@ -9,7 +9,7 @@
     "db:generate": "dotenvx run --convention=flow -- prisma generate",
     "db:migrate": "dotenvx run --convention=flow -- prisma migrate",
     "db:studio": "prisma studio",
-    "dev": "dotenvx run --convention=flow -- vite dev --port 3000",
+    "dev": "dotenvx run --convention=flow -- vite dev --port 3033",
     "format": "prettier",
     "lint": "eslint",
     "serve": "vite preview",

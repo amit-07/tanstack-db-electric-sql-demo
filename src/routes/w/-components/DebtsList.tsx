@@ -212,9 +212,9 @@ const DebtField = ({
 const TotalDisplay = ({ label, amount }: { label: string; amount: number }) => (
   <div className="text-right">
     <span className="block font-bold text-foreground">
-      {amount.toLocaleString('en-US', {
+      {amount.toLocaleString('en-IN', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'INR',
         maximumFractionDigits: 0,
       })}
     </span>
@@ -412,7 +412,7 @@ export function DebtsList({
                       <DebtField
                         label="Min Payment"
                         value={debt.minPayment.toNumber()}
-                        prefix="$"
+                        prefix="₹"
                         onSave={(val) =>
                           onUpdateDebt(debt.id, 'minPayment', val)
                         }
@@ -420,7 +420,7 @@ export function DebtsList({
                       <DebtField
                         label="Balance"
                         value={debt.balance.toNumber()}
-                        prefix="$"
+                        prefix="₹"
                         onSave={(val) => onUpdateDebt(debt.id, 'balance', val)}
                       />
                     </div>

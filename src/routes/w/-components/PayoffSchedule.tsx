@@ -125,7 +125,7 @@ export function PayoffSchedule({
                                   .toNumber()
                                   .toLocaleString('en-US', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: 'INR',
                                     minimumFractionDigits: 0,
                                     maximumFractionDigits: 0,
                                   })}
@@ -135,7 +135,7 @@ export function PayoffSchedule({
                               .toNumber()
                               .toLocaleString('en-US', {
                                 style: 'currency',
-                                currency: 'USD',
+                                currency: 'INR',
                                 minimumFractionDigits: 0,
                                 maximumFractionDigits: 0,
                               })}
@@ -150,7 +150,7 @@ export function PayoffSchedule({
                         .toNumber()
                         .toLocaleString('en-US', {
                           style: 'currency',
-                          currency: 'USD',
+                          currency: 'INR',
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
                         })}
